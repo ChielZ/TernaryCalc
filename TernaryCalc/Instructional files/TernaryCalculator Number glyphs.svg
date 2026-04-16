@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="37800px" height="1400px" viewBox="0 0 37800 1400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>TernaryCalculator</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Display-numerals" transform="translate(35994, -10242)">
+            <g id="13" transform="translate(805, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="701" y1="100" x2="301" y2="1300" id="+C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="12" transform="translate(-595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="601" y1="100" x2="601" y2="1300" id="0D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="601" y1="100" x2="201" y2="1300" id="+D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="11" transform="translate(-1995, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="401" y1="100" x2="801" y2="1300" id="-B" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="-199" y2="1300" id="+H" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="10" transform="translate(-3395, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="301" y2="1300" id="0G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="701" y1="100" x2="301" y2="1300" id="+C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="9" transform="translate(-4795, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="601" y1="100" x2="601" y2="1300" id="0D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="401" y2="1300" id="0F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="8" transform="translate(-6195, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="701" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="301" y2="1300" id="0G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="7" transform="translate(-7595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="101" y1="100" x2="501" y2="1300" id="-E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="901" y1="100" x2="501" y2="1300" id="+A" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="101" y1="100" x2="-299" y2="1300" id="+I" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="6" transform="translate(-8995, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="300" y1="100" x2="700" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="700" y1="100" x2="700" y2="1300" id="0C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="5" transform="translate(-10395, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="401" y1="100" x2="801" y2="1300" id="-B" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="601" y2="1300" id="-D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="-199" y2="1300" id="+H" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="4" transform="translate(-11795, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="601" y1="100" x2="201" y2="1300" id="+D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="3" transform="translate(-13195, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="501" y1="100" x2="501" y2="1300" id="0E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="2" transform="translate(-14595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="701" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="1" transform="translate(-15995, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="0" transform="translate(-17395, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="301" y2="1300" id="0G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-1" transform="translate(-18295, 10942) scale(1, -1) translate(18295, -10942)translate(-18795, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-2" transform="translate(-19695, 10942) scale(1, -1) translate(19695, -10942)translate(-20195, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="701" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-3" transform="translate(-21095, 10942) scale(1, -1) translate(21095, -10942)translate(-21595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="501" y1="100" x2="501" y2="1300" id="0E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-4" transform="translate(-22495, 10942) scale(1, -1) translate(22495, -10942)translate(-22995, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="601" y1="100" x2="201" y2="1300" id="+D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-5" transform="translate(-23895, 10942) scale(1, -1) translate(23895, -10942)translate(-24395, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="401" y1="100" x2="801" y2="1300" id="-B" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="601" y2="1300" id="-D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="-199" y2="1300" id="+H" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-6" transform="translate(-25295, 10942) scale(1, -1) translate(25295, -10942)translate(-25795, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="701" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="701" y1="100" x2="701" y2="1300" id="0C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-7" transform="translate(-26695, 10942) scale(1, -1) translate(26695, -10942)translate(-27195, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="101" y1="100" x2="501" y2="1300" id="-E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="901" y1="100" x2="501" y2="1300" id="+A" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="101" y1="100" x2="-299" y2="1300" id="+I" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-8" transform="translate(-28095, 10942) scale(1, -1) translate(28095, -10942)translate(-28595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="701" y2="1300" id="-C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="301" y2="1300" id="0G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-9" transform="translate(-29495, 10942) scale(1, -1) translate(29495, -10942)translate(-29995, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="601" y1="100" x2="601" y2="1300" id="0D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="401" y2="1300" id="0F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-10" transform="translate(-30895, 10942) scale(1, -1) translate(30895, -10942)translate(-31395, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="301" y1="100" x2="301" y2="1300" id="0G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="701" y1="100" x2="301" y2="1300" id="+C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-11" transform="translate(-32295, 10942) scale(1, -1) translate(32295, -10942)translate(-32795, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="401" y1="100" x2="801" y2="1300" id="-B" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="401" y1="100" x2="1" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="201" y1="100" x2="-199" y2="1300" id="+H" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-12" transform="translate(-33894, 10942) scale(1, -1) translate(33894, -10942)translate(-34594, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="0" y="0" width="1400" height="1400"></rect>
+                <line x1="1000" y1="100" x2="1000" y2="1300" id="0D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="1000" y1="100" x2="600" y2="1300" id="+D" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="800" y1="100" x2="400" y2="1300" id="+F" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+            <g id="-13" transform="translate(-35095, 10942) scale(1, -1) translate(35095, -10942)translate(-35595, 10242)">
+                <rect id="Rectangle-Copy" fill="#D8D8D8" opacity="0" x="-399" y="0" width="1400" height="1400"></rect>
+                <line x1="701" y1="100" x2="301" y2="1300" id="+C" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="501" y1="100" x2="101" y2="1300" id="+E" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+                <line x1="301" y1="100" x2="-99" y2="1300" id="+G" stroke="#000000" stroke-width="60" stroke-linecap="round"></line>
+            </g>
+        </g>
+    </g>
+</svg>

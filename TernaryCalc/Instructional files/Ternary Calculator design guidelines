@@ -1,0 +1,35 @@
+Ternary Calculator design guidelines
+
+The calculator has two distinct areas: the keypad and the display. The keypad will respond to user input (ie tap gestures), the results will be shown in the display area. 
+
+The display shows numbers as 'tri-trits': combinations of three trits, where for example '///' represents +13 (+9 +3 +1) and '\|\' represents -10 (-9 (+0*3) -1). Leading zeros are not shown, so for example 2 is represented as '/\' and not as '|/\'. 
+The display has three lines for numbers (6 tri-trits each) and two lines for displaying the operations (smaller and with lower opacity) in between them. Some operators can be combined on one line, for example '6 times 1/7' will be represented as:
+/\|
+[x_right] [invert]
+/\/
+
+All glyph sets (keys, display numbers, display operators) are included as svg vector files and png images. The display is monospaced, all example glyphs have been centered horizontally in frames of equal size (per glyph set). 
+
+The proportions of the calculator itself should be constrained (for reference: the input keys should always be square. The calculator can float within the AppBackground to accomodate different screen proportions. Safe areas should always be respected for the calculator itself (with some margin added on top), but the background does not need to respect the safe area and should fill the entire screen.
+
+There is an 'info' button above the calculator, this can be implemented later for toggling a settings/instructions screen.
+
+The app has a colour scheme, it should be parametrized with variables as follows:
+
+AppBackground:			#88ACA2
+CalculatorFrameStroke:	#000000
+CalculatorBackground:	#000000
+KeypadFrameStroke:		#ECD9AF
+KeypadBackground:		#F08537
+KeyStroke:				#ECD9AF
+KeyBackground:			#000000
+KeyDigit:				#ECD9AF
+DisplayFrameStroke:		#F08537
+DisplayBackground:		#ECD9AF
+DisplayDigit:			#000000
+DisplayOperator:		#000000
+DisplayOperatorOpacity:	0.33
+
+
+(Even though many of these currently share the same value, this will make it easier to adapt the design in the future, eg adding different 'skin' options.)
+
