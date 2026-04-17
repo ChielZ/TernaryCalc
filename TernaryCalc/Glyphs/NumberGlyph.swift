@@ -58,7 +58,11 @@ struct FixedNumberRow: View {
     var body: some View {
         let ints  = integerSlots
         let fracs = fractionalSlots
-        let used  = ints.count + fracs.count
+        // When the decimal is shown but no fractional tri-trits exist yet
+        // (user just pressed `.`), reserve one slot's worth of space to the
+        // right of the integer so the decimal has somewhere to sit.
+        let reservePlaceholder = display.showDecimal && fracs.isEmpty
+        let used  = ints.count + fracs.count + (reservePlaceholder ? 1 : 0)
         let empty = max(0, maxSlots - used)
         let pointFrameW = slotSize * 0.4
         let boundaryX = slotSize * CGFloat(empty + ints.count)
@@ -76,8 +80,11 @@ struct FixedNumberRow: View {
                     TritGroupView(trits: fracs[i], color: color, strokeFraction: strokeFraction)
                         .frame(width: slotSize, height: slotSize)
                 }
+                if reservePlaceholder {
+                    Color.clear.frame(width: slotSize, height: slotSize)
+                }
             }
-            if !fracs.isEmpty {
+            if display.showDecimal {
                 PointGlyph(color: color)
                     .frame(width: pointFrameW, height: slotSize)
                     .offset(x: boundaryX - pointFrameW / 2)

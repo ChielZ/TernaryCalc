@@ -50,6 +50,24 @@ final class CalculatorState: ObservableObject {
 
     @Published private(set) var errored: Bool = false
 
+    /// Stack of past states (most recent last). Every mutating key press
+    /// pushes onto this stack first; backspace pops and restores. This gives
+    /// full-fidelity undo — not just "delete last trit" — at the cost of ~a
+    /// few KB per entry. Capped at 500 entries.
+    private var undoStack: [StateSnapshot] = []
+    private let undoLimit = 500
+
+    private struct StateSnapshot {
+        let integerEntry: [Trit]
+        let fractionalEntry: [Trit]
+        let inFractional: Bool
+        let history: [DisplayRow]
+        let accumulator: BalancedTernary?
+        let pendingOp: BinaryOp?
+        let pendingModifiers: [Modifier]
+        let errored: Bool
+    }
+
     // MARK: - Derived
 
     var entryDisplay: DisplayTrits? {
@@ -57,8 +75,12 @@ final class CalculatorState: ObservableObject {
             return nil
         }
         let intTrits  = integerEntry.isEmpty ? [Trit.zero] : strippedLeading(integerEntry)
-        let fracTrits = strippedTrailing(fractionalEntry)
-        return DisplayTrits(integer: intTrits, fractional: fracTrits)
+        // Deliberately do NOT strip trailing zero fractional trits during
+        // entry — the user typed them and should see them while typing.
+        // Stripping happens once the entry commits to the history.
+        return DisplayTrits(integer: intTrits,
+                            fractional: fractionalEntry,
+                            showDecimal: inFractional)
     }
 
     var entryIsEmpty: Bool {
@@ -80,6 +102,7 @@ final class CalculatorState: ObservableObject {
         let newIntCount  = inFractional ? integerEntry.count       : integerEntry.count + 1
         let newFracCount = inFractional ? fractionalEntry.count + 1 : fractionalEntry.count
         if !fitsInDisplay(intCount: newIntCount, fracCount: newFracCount) { return }
+        pushSnapshot()
         if inFractional {
             fractionalEntry.append(trit)
         } else {
@@ -87,21 +110,12 @@ final class CalculatorState: ObservableObject {
         }
     }
 
-    func tab() {
-        if errored { return }
-        if inFractional {
-            let lenMod = fractionalEntry.count % 3
-            let needed = lenMod == 0 ? 3 : (3 - lenMod)
-            if !fitsInDisplay(intCount: integerEntry.count,
-                              fracCount: fractionalEntry.count + needed) { return }
-            fractionalEntry.append(contentsOf: Array(repeating: .zero, count: needed))
-        } else {
-            let lenMod = integerEntry.count % 3
-            let needed = lenMod == 0 ? 3 : (3 - lenMod)
-            if !fitsInDisplay(intCount: integerEntry.count + needed,
-                              fracCount: fractionalEntry.count) { return }
-            integerEntry = Array(repeating: .zero, count: needed) + integerEntry
-        }
+    /// Undo the most recent mutating keypress. Pops one state snapshot off the
+    /// undo stack; no-op if empty. Works even when `errored` is true, so the
+    /// user can walk back out of an error state.
+    func backspace() {
+        guard let snap = undoStack.popLast() else { return }
+        restore(snap)
     }
 
     private func fitsInDisplay(intCount: Int, fracCount: Int, maxSlots: Int = 6) -> Bool {
@@ -112,10 +126,13 @@ final class CalculatorState: ObservableObject {
 
     func point() {
         if errored { return }
-        if !inFractional { inFractional = true }
+        if inFractional { return }
+        pushSnapshot()
+        inFractional = true
     }
 
     func clear() {
+        pushSnapshot()
         integerEntry.removeAll()
         fractionalEntry.removeAll()
         inFractional = false
@@ -135,6 +152,7 @@ final class CalculatorState: ObservableObject {
     private func toggleModifier(_ m: Modifier) {
         if errored { return }
         guard pendingOp != nil else { return }
+        pushSnapshot()
         if let i = pendingModifiers.firstIndex(of: m) {
             pendingModifiers.remove(at: i)
         } else {
@@ -144,6 +162,7 @@ final class CalculatorState: ObservableObject {
 
     func operation(_ op: BinaryOp) {
         if errored { return }
+        pushSnapshot()
 
         if let value = currentEntryValue() {
             if let acc = accumulator, let p = pendingOp {
@@ -171,6 +190,7 @@ final class CalculatorState: ObservableObject {
 
     func equals() {
         if errored { return }
+        pushSnapshot()
 
         if let value = currentEntryValue() {
             if let acc = accumulator, let p = pendingOp {
@@ -273,6 +293,38 @@ final class CalculatorState: ObservableObject {
         errored = true
     }
 
+    // MARK: - Undo stack
+
+    private func takeSnapshot() -> StateSnapshot {
+        StateSnapshot(
+            integerEntry: integerEntry,
+            fractionalEntry: fractionalEntry,
+            inFractional: inFractional,
+            history: history,
+            accumulator: accumulator,
+            pendingOp: pendingOp,
+            pendingModifiers: pendingModifiers,
+            errored: errored
+        )
+    }
+
+    private func pushSnapshot() {
+        undoStack.append(takeSnapshot())
+        if undoStack.count > undoLimit {
+            undoStack.removeFirst(undoStack.count - undoLimit)
+        }
+    }
+
+    private func restore(_ s: StateSnapshot) {
+        integerEntry     = s.integerEntry
+        fractionalEntry  = s.fractionalEntry
+        inFractional     = s.inFractional
+        history          = s.history
+        accumulator      = s.accumulator
+        pendingOp        = s.pendingOp
+        pendingModifiers = s.pendingModifiers
+        errored          = s.errored
+    }
 }
 
 // MARK: - BalancedTernary from trit-entry

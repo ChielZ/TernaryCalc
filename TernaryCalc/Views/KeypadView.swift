@@ -12,7 +12,7 @@ struct KeypadView: View {
 
     private let layout: [[KeyContent]] = [
         [.trit(.pos),  .op(.xRight), .op(.invert), .op(.clear)],
-        [.trit(.zero), .op(.plus),   .op(.flip),   .op(.tab)],
+        [.trit(.zero), .op(.plus),   .op(.flip),   .op(.backspace)],
         [.trit(.neg),  .op(.xLeft),  .op(.point),  .op(.equals)]
     ]
 
@@ -80,12 +80,12 @@ struct KeypadView: View {
             case .plus:    state.operation(.add)
             case .xRight:  state.operation(.xRight)
             case .xLeft:   state.operation(.xLeft)
-            case .invert:  state.invert()
-            case .flip:    state.flip()
-            case .clear:   state.clear()
-            case .tab:     state.tab()
-            case .point:   state.point()
-            case .equals:  state.equals()
+            case .invert:    state.invert()
+            case .flip:      state.flip()
+            case .clear:     state.clear()
+            case .backspace: state.backspace()
+            case .point:     state.point()
+            case .equals:    state.equals()
             }
         }
     }

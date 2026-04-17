@@ -8,8 +8,8 @@ enum OperatorGlyph: Hashable {
     case xLeft
     case invert
     case flip
-    case clear
-    case tab
+    case clear       // square outline
+    case backspace   // chevron `<`
     case point
     case equals
 }
@@ -79,13 +79,13 @@ struct OperatorShape: Shape {
             p.addLine(to: P(0.5 - 0.10, 0.5))
             p.closeSubpath()
 
-        case .clear:
+        case .backspace:
             // Open chevron `<`.
             p.move(to: P(0.78, 0.22))
             p.addLine(to: P(0.22, 0.5))
             p.addLine(to: P(0.78, 0.78))
 
-        case .tab:
+        case .clear:
             // Square outline.
             let m: CGFloat = 0.22
             p.addRect(CGRect(x: xo + m * side, y: yo + m * side,

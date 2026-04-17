@@ -103,10 +103,26 @@ extension BalancedTernary {
 /// One number's display trits, integer + fractional, with the convention used
 /// throughout the app: integer trits are most-significant first; fractional
 /// trits are at positions -1, -2, … (in display order, left to right after the
-/// decimal point).
+/// decimal point). `showDecimal` controls whether the decimal point is drawn
+/// — normally it is drawn iff the fractional section is non-empty, but for
+/// an in-progress entry the decimal must also be drawn once the user has
+/// pressed `.` even before they've typed any fractional trits.
 struct DisplayTrits: Hashable {
     let integer: [Trit]
     let fractional: [Trit]
+    let showDecimal: Bool
+
+    init(integer: [Trit], fractional: [Trit]) {
+        self.integer = integer
+        self.fractional = fractional
+        self.showDecimal = !fractional.isEmpty
+    }
+
+    init(integer: [Trit], fractional: [Trit], showDecimal: Bool) {
+        self.integer = integer
+        self.fractional = fractional
+        self.showDecimal = showDecimal
+    }
 }
 
 extension BalancedTernary {
