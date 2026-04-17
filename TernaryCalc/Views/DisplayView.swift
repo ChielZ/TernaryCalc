@@ -5,7 +5,7 @@ struct DisplayView: View {
     let metrics: CalculatorMetrics
     @Environment(\.ternaryTheme) private var theme
 
-    private let visibleSlots = 5      // 3 number + 2 op rows max
+    private let visibleSlots = 5
     private let numberWeight: CGFloat = 0.27
     private let opWeight:     CGFloat = 0.10
 
@@ -41,12 +41,8 @@ struct DisplayView: View {
         case .number(let display):
             NumberGlyph(display: display, color: theme.displayDigit)
                 .frame(maxWidth: .infinity, maxHeight: metrics.displayHeight * numberWeight, alignment: .trailing)
-        case .op(let glyph):
-            OperatorGlyphView(glyph: glyph, color: theme.displayOperator,
-                              strokeFraction: 60.0 / 960.0)
-                .opacity(theme.displayOperatorOpacity)
-                .frame(maxWidth: metrics.displayHeight * opWeight,
-                       maxHeight: metrics.displayHeight * opWeight)
+        case .ops(let glyphs):
+            opsRow(glyphs)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case .error:
             Text("OVR")
@@ -56,10 +52,26 @@ struct DisplayView: View {
         }
     }
 
-    /// Compose the visible rows: history followed by the in-progress entry,
-    /// trimmed from the front so only the most recent `visibleSlots` show.
+    private func opsRow(_ glyphs: [OperatorGlyph]) -> some View {
+        let side = metrics.displayHeight * opWeight
+        return HStack(spacing: side * 0.25) {
+            ForEach(Array(glyphs.enumerated()), id: \.offset) { _, g in
+                OperatorGlyphView(glyph: g,
+                                  color: theme.displayOperator,
+                                  strokeFraction: 60.0 / 960.0)
+                    .frame(width: side, height: side)
+            }
+        }
+        .opacity(theme.displayOperatorOpacity)
+    }
+
+    /// Compose the visible rows: committed history + live pending-op row (if
+    /// any) + in-progress entry (if any), trimmed to the most recent N.
     private func visibleRows() -> [DisplayRow] {
         var rows = state.history
+        if let live = state.pendingOpsRow {
+            rows.append(.ops(live))
+        }
         if let entry = state.entryDisplay {
             rows.append(.number(entry))
         }
