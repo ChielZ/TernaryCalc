@@ -43,17 +43,19 @@ struct FixedNumberRow: View {
     var maxSlots: Int = 6
     var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
 
+    /// Each tri-trit is rendered as its *value* glyph. Integer tri-trits strip
+    /// leading zeros (so `||/` → `/` = 1 at the least-significant end of the
+    /// slot), while fractional tri-trits strip TRAILING zeros (so `/||` → `/`
+    /// = 1/3 at the most-significant end of the slot — and `|/|` → `|/` =
+    /// 1/9). All-zero tri-trits collapse to a single `|`. The glyph centers
+    /// itself within the slot via `tritCenters`.
     private var integerSlots: [[Trit]] {
         let raw = display.integer.isEmpty ? [Trit.zero] : display.integer
         let padCount = (3 - raw.count % 3) % 3
         let padded = Array(repeating: Trit.zero, count: padCount) + raw
         var groups: [[Trit]] = []
         for start in stride(from: 0, to: padded.count, by: 3) {
-            groups.append(Array(padded[start..<start + 3]))
-        }
-        if var leading = groups.first {
-            while leading.count > 1, leading.first == .zero { leading.removeFirst() }
-            groups[0] = leading
+            groups.append(stripLeadingZeros(Array(padded[start..<start + 3])))
         }
         return groups
     }
@@ -64,10 +66,27 @@ struct FixedNumberRow: View {
         var i = 0
         while i < display.fractional.count {
             let end = min(i + 3, display.fractional.count)
-            groups.append(Array(display.fractional[i..<end]))
+            var group = Array(display.fractional[i..<end])
+            // Pad the last fractional group with trailing zeros so its place
+            // values line up with the tri-trit slot (top/middle/bottom = −1,
+            // −2, −3 relative to the slot's most-significant position).
+            while group.count < 3 { group.append(.zero) }
+            groups.append(stripTrailingZeros(group))
             i += 3
         }
         return groups
+    }
+
+    private func stripLeadingZeros(_ group: [Trit]) -> [Trit] {
+        var out = group
+        while out.count > 1, out.first == .zero { out.removeFirst() }
+        return out
+    }
+
+    private func stripTrailingZeros(_ group: [Trit]) -> [Trit] {
+        var out = group
+        while out.count > 1, out.last == .zero { out.removeLast() }
+        return out
     }
 
     var body: some View {

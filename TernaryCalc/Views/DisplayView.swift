@@ -49,12 +49,23 @@ struct DisplayView: View {
         let rows = visibleRows()
 
         VStack(spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                // Two number/error rows in a row would otherwise sit flush.
+                // Insert an `opHeight` gap so number rows always get the same
+                // breathing room they'd get if an operator were between them.
+                if index > 0, isNonOpRow(row), isNonOpRow(rows[index - 1]) {
+                    Color.clear.frame(height: opHeight)
+                }
                 rowView(row, slotSize: slotSize, opHeight: opHeight)
             }
         }
         .padding(.vertical, verticalPadding)
         .frame(width: size.width, height: size.height, alignment: .top)
+    }
+
+    private func isNonOpRow(_ row: DisplayRow) -> Bool {
+        if case .ops = row { return false }
+        return true
     }
 
     @ViewBuilder
@@ -103,15 +114,29 @@ struct DisplayView: View {
         if let entry = state.entryDisplay {
             rows.append(.number(entry))
         }
-        if rows.count > visibleSlots {
-            rows = Array(rows.suffix(visibleSlots))
+        // Trim leading rows until the effective visual row count (including
+        // implicit spacers that the render inserts between adjacent non-op
+        // rows) fits within `visibleSlots`. Otherwise e.g. `/+/=/+` would
+        // overflow the display panel.
+        while effectiveRowCount(rows) > visibleSlots {
+            rows.removeFirst()
         }
         // The top row must be a number/error row, never an ops row — scroll
-        // one more line if trimming to `visibleSlots` leaves an ops row at the
-        // top.
+        // one more line if trimming leaves an ops row at the top.
         while case .ops = rows.first {
             rows.removeFirst()
         }
         return rows
+    }
+
+    private func effectiveRowCount(_ rows: [DisplayRow]) -> Int {
+        guard rows.count > 1 else { return rows.count }
+        var count = rows.count
+        for i in 1..<rows.count {
+            if isNonOpRow(rows[i - 1]) && isNonOpRow(rows[i]) {
+                count += 1
+            }
+        }
+        return count
     }
 }
