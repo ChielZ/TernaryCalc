@@ -76,7 +76,7 @@ struct DisplayView: View {
             ForEach(Array(glyphs.enumerated()), id: \.offset) { _, g in
                 OperatorGlyphView(glyph: g,
                                   color: theme.displayOperator,
-                                  strokeFraction: 60.0 / 960.0)
+                                  strokeFraction: TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize)
                     .frame(width: opSize, height: opSize)
             }
         }

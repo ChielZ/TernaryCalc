@@ -6,29 +6,32 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let safe = proxy.safeAreaInsets
-            let topInset = safe.top + proxy.size.height * CalcLayout.extraTopMarginRatio
-            let avail = CGSize(
-                width:  max(0, proxy.size.width  - safe.leading - safe.trailing),
-                height: max(0, proxy.size.height - topInset    - safe.bottom)
-            )
-            let metrics = CalculatorMetrics.fit(into: avail)
+            let size = proxy.size
+            // Reserve symmetric top/bottom room — sized off the shorter side
+            // of the screen rather than its width, so the amount of vertical
+            // margin is consistent across portrait and landscape.
+            let shortSide = min(size.width, size.height)
+            let reserve = shortSide * CalcLayout.verticalReserveRatio
+            let avail = CGSize(width: size.width,
+                               height: max(1, size.height - 2 * reserve))
+            let maxCalcWidth = shortSide * CalcLayout.maxCalcWidthRatio
+            let metrics = CalculatorMetrics.fit(into: avail, maxCalcWidth: maxCalcWidth)
             let infoSize = metrics.calcWidth * CalcLayout.infoButtonRatio
             let infoGap  = metrics.outerPadding
 
             ZStack {
                 theme.appBackground
-                    .ignoresSafeArea()
 
-                VStack(spacing: infoGap) {
-                    InfoButton(size: infoSize)
-                    CalculatorView(state: state, metrics: metrics)
-                }
-                .padding(.top, topInset)
-                .padding(.bottom, safe.bottom)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                CalculatorView(state: state, metrics: metrics)
+                    .position(x: size.width / 2, y: size.height / 2)
+
+                InfoButton(size: infoSize)
+                    .position(x: size.width / 2,
+                              y: size.height / 2 - metrics.calcHeight / 2 - infoGap - infoSize / 2)
             }
         }
+        .ignoresSafeArea()
+        .statusBarHidden(true)
     }
 }
 

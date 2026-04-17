@@ -1,19 +1,34 @@
 import SwiftUI
 
-/// Decimal-point glyph — a small ring on the baseline of its frame.
+/// Decimal-point / ring glyph. Line width is `strokeFraction × frame height`
+/// — intentionally tied to the frame *height* (not its short side) so the
+/// ring's stroke matches the trit stroke at the given size. The inner
+/// opening diameter equals the line width (per design spec), which fixes the
+/// ring's outer diameter at 3 × line width.
 struct PointGlyph: View {
     var color: Color = .black
-    var strokeFraction: CGFloat = 0.11
+    var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
+    var placement: PointPlacement = .centered
 
     var body: some View {
         GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            let radius = side * 0.28
-            let lineWidth = side * strokeFraction
+            let refHeight = geo.size.height
+            let lineWidth = refHeight * strokeFraction
+            let r = 1.5 * lineWidth                // → inner ∅ = 1 × lineWidth
+            let cx = geo.size.width / 2
+            let cy: CGFloat = {
+                switch placement {
+                case .centered:
+                    return geo.size.height / 2
+                case .baseline(let b):
+                    // Outer edge of the ring sits on the baseline.
+                    return geo.size.height * b - r
+                }
+            }()
             Circle()
                 .strokeBorder(color, lineWidth: lineWidth)
-                .frame(width: radius * 2, height: radius * 2)
-                .position(x: geo.size.width / 2, y: geo.size.height * 0.86)
+                .frame(width: 2 * r, height: 2 * r)
+                .position(x: cx, y: cy)
         }
     }
 }
@@ -85,7 +100,9 @@ struct FixedNumberRow: View {
                 }
             }
             if display.showDecimal {
-                PointGlyph(color: color)
+                PointGlyph(color: color,
+                           strokeFraction: strokeFraction,
+                           placement: .centered)
                     .frame(width: pointFrameW, height: slotSize)
                     .offset(x: boundaryX - pointFrameW / 2)
             }

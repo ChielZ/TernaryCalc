@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Operator and special-key glyphs. All shapes are drawn within a normalized
-/// 1×1 box and stroked by an outer view that supplies the line width.
+/// Operator and special-key glyphs. All are constructed in the same 1400-unit
+/// design box as the trit glyphs so the `/`, `|`, `\` primitives and the
+/// composite glyphs share stroke width, line length, and diagonal angles.
 enum OperatorGlyph: Hashable {
     case plus
     case xRight
@@ -14,6 +15,15 @@ enum OperatorGlyph: Hashable {
     case equals
 }
 
+/// Where a point glyph's ring is placed vertically within its frame.
+enum PointPlacement: Hashable {
+    case centered                // keypad key
+    case baseline(CGFloat)       // display: y-fraction of the frame height at
+                                 // which the ring's bottom edge should land
+}
+
+private let designBox: CGFloat = 1400
+
 struct OperatorShape: Shape {
     let glyph: OperatorGlyph
 
@@ -22,104 +32,105 @@ struct OperatorShape: Shape {
         let xo = rect.midX - side / 2
         let yo = rect.midY - side / 2
 
-        func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: xo + x * side, y: yo + y * side)
+        // P(dx, dy) takes coordinates in 1400-unit design space and maps into
+        // the square `side × side` region centered on `rect`.
+        func P(_ dx: CGFloat, _ dy: CGFloat) -> CGPoint {
+            CGPoint(x: xo + (dx / designBox) * side,
+                    y: yo + (dy / designBox) * side)
         }
 
         var p = Path()
         switch glyph {
         case .plus:
-            // Vertical and horizontal arms, ~56% of box.
-            p.move(to: P(0.5, 0.22)); p.addLine(to: P(0.5, 0.78))
-            p.move(to: P(0.22, 0.5)); p.addLine(to: P(0.78, 0.5))
+            // `|` + 90°-rotated `|` superimposed.
+            p.move(to: P(700, 100));  p.addLine(to: P(700, 1300))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
 
         case .xRight:
-            // Shaft + open triangle pointing right.
-            p.move(to: P(0.20, 0.5)); p.addLine(to: P(0.62, 0.5))
-            p.move(to: P(0.62, 0.36))
-            p.addLine(to: P(0.84, 0.5))
-            p.addLine(to: P(0.62, 0.64))
-            p.closeSubpath()
+            // Left half of `<` + vertical base at x=700 + left half of shaft.
+            p.move(to: P(1300, 700)); p.addLine(to: P(700, 500))
+            p.move(to: P(1300, 700)); p.addLine(to: P(700, 900))
+            p.move(to: P(700, 500));  p.addLine(to: P(700, 900))
+            p.move(to: P(100, 700));  p.addLine(to: P(700, 700))
 
         case .xLeft:
-            p.move(to: P(0.80, 0.5)); p.addLine(to: P(0.38, 0.5))
-            p.move(to: P(0.38, 0.36))
-            p.addLine(to: P(0.16, 0.5))
-            p.addLine(to: P(0.38, 0.64))
-            p.closeSubpath()
-
-        case .invert:
-            // Four arms pointing inward + horizontal-axis diamond at center.
-            let outer: CGFloat = 0.18
-            let inner: CGFloat = 0.36
-            // arms
-            p.move(to: P(outer, 0.5)); p.addLine(to: P(inner, 0.5))
-            p.move(to: P(1 - outer, 0.5)); p.addLine(to: P(1 - inner, 0.5))
-            p.move(to: P(0.5, outer)); p.addLine(to: P(0.5, inner))
-            p.move(to: P(0.5, 1 - outer)); p.addLine(to: P(0.5, 1 - inner))
-            // diamond (long axis horizontal)
-            p.move(to: P(inner, 0.5))
-            p.addLine(to: P(0.5, 0.5 - 0.10))
-            p.addLine(to: P(1 - inner, 0.5))
-            p.addLine(to: P(0.5, 0.5 + 0.10))
-            p.closeSubpath()
+            // Mirror of xRight.
+            p.move(to: P(100, 700));  p.addLine(to: P(700, 500))
+            p.move(to: P(100, 700));  p.addLine(to: P(700, 900))
+            p.move(to: P(700, 500));  p.addLine(to: P(700, 900))
+            p.move(to: P(700, 700));  p.addLine(to: P(1300, 700))
 
         case .flip:
-            // Same as invert but with diamond's long axis vertical.
-            let outer: CGFloat = 0.18
-            let inner: CGFloat = 0.36
-            p.move(to: P(outer, 0.5)); p.addLine(to: P(inner, 0.5))
-            p.move(to: P(1 - outer, 0.5)); p.addLine(to: P(1 - inner, 0.5))
-            p.move(to: P(0.5, outer)); p.addLine(to: P(0.5, inner))
-            p.move(to: P(0.5, 1 - outer)); p.addLine(to: P(0.5, 1 - inner))
-            // diamond (long axis vertical)
-            p.move(to: P(0.5, inner))
-            p.addLine(to: P(0.5 + 0.10, 0.5))
-            p.addLine(to: P(0.5, 1 - inner))
-            p.addLine(to: P(0.5 - 0.10, 0.5))
-            p.closeSubpath()
+            // Horizontal diamond (4 arrow arms from left & right apexes) + `|`.
+            // The horizontal line through the arrow points is intentionally
+            // omitted — only the vertical `|` stays.
+            p.move(to: P(100, 700));  p.addLine(to: P(700, 500))
+            p.move(to: P(100, 700));  p.addLine(to: P(700, 900))
+            p.move(to: P(1300, 700)); p.addLine(to: P(700, 500))
+            p.move(to: P(1300, 700)); p.addLine(to: P(700, 900))
+            p.move(to: P(700, 100));  p.addLine(to: P(700, 1300))
+
+        case .invert:
+            // flip rotated 90° CW around (700,700): (x,y) → (y, 1400-x).
+            // Vertical diamond (4 arms from top & bottom apexes) + horizontal
+            // line. The vertical line through the arrow points is omitted.
+            p.move(to: P(700, 100));  p.addLine(to: P(500, 700))
+            p.move(to: P(700, 100));  p.addLine(to: P(900, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(500, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(900, 700))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
 
         case .backspace:
-            // Open chevron `<`.
-            p.move(to: P(0.78, 0.22))
-            p.addLine(to: P(0.22, 0.5))
-            p.addLine(to: P(0.78, 0.78))
+            // `<`: two arms from a left apex to the right edge, joined at
+            // tips. Matches the trit diagonal angle rotated 90°.
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
 
         case .clear:
-            // Square outline.
-            let m: CGFloat = 0.22
-            p.addRect(CGRect(x: xo + m * side, y: yo + m * side,
-                             width: (1 - 2 * m) * side, height: (1 - 2 * m) * side))
-
-        case .point:
-            // Small ring.
-            let r: CGFloat = 0.08
-            p.addEllipse(in: CGRect(x: xo + (0.5 - r) * side, y: yo + (0.5 - r) * side,
-                                    width: 2 * r * side, height: 2 * r * side))
+            // Square outline — four `|`-length sides. Round stroke caps at
+            // the corners overlap into smooth quarter-circles.
+            p.move(to: P(100, 100));   p.addLine(to: P(1300, 100))
+            p.move(to: P(1300, 100));  p.addLine(to: P(1300, 1300))
+            p.move(to: P(1300, 1300)); p.addLine(to: P(100, 1300))
+            p.move(to: P(100, 1300));  p.addLine(to: P(100, 100))
 
         case .equals:
-            // Two horizontal bars.
-            p.move(to: P(0.22, 0.38)); p.addLine(to: P(0.78, 0.38))
-            p.move(to: P(0.22, 0.62)); p.addLine(to: P(0.78, 0.62))
+            // Two horizontal `|`s separated by a 3×stroke gap (edge-to-edge);
+            // centers are 4×stroke apart, i.e. y = 500 and y = 900.
+            p.move(to: P(100, 500));  p.addLine(to: P(1300, 500))
+            p.move(to: P(100, 900));  p.addLine(to: P(1300, 900))
+
+        case .point:
+            // Rendered separately by OperatorGlyphView → PointGlyph so the
+            // ring's dimensions stay tied to the chosen stroke width.
+            break
         }
         return p
     }
 }
 
-/// Renders an OperatorGlyph in a square area with a stroke width derived
-/// from a design fraction.
 struct OperatorGlyphView: View {
     let glyph: OperatorGlyph
     var color: Color = .black
-    var strokeFraction: CGFloat = 100.0 / 1600.0
+    var strokeFraction: CGFloat = 100.0 / 1400.0
+    var pointPlacement: PointPlacement = .centered
 
     var body: some View {
-        GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            let lineWidth = side * strokeFraction
-            OperatorShape(glyph: glyph)
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+        if glyph == .point {
+            PointGlyph(color: color,
+                       strokeFraction: strokeFraction,
+                       placement: pointPlacement)
+                .aspectRatio(1, contentMode: .fit)
+        } else {
+            GeometryReader { geo in
+                let side = min(geo.size.width, geo.size.height)
+                let lineWidth = side * strokeFraction
+                OperatorShape(glyph: glyph)
+                    .stroke(color, style: StrokeStyle(lineWidth: lineWidth,
+                                                       lineCap: .round,
+                                                       lineJoin: .round))
+            }
+            .aspectRatio(1, contentMode: .fit)
         }
-        .aspectRatio(1, contentMode: .fit)
     }
 }

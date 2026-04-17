@@ -3,21 +3,36 @@ import SwiftUI
 enum CalcLayout {
     static let calculatorAspectRatio: CGFloat = 11.0 / 16.0
 
-    static let calculatorOuterPaddingRatio: CGFloat = 0.045
-    static let panelGapRatio: CGFloat              = 0.030
-    static let panelInnerPaddingRatio: CGFloat     = 0.045
-    static let keyGapRatio: CGFloat                = 0.040
+    /// Base spacing unit, as a ratio of `calcWidth`. Used for:
+    /// - padding between the calc outer edge and the display/keypad panels,
+    /// - padding inside the keypad panel (between its edge and the keys),
+    /// - gap between adjacent keys.
+    /// The gap between display and keypad is `2 × baseSpacingRatio`.
+    static let baseSpacingRatio: CGFloat = 0.04
 
-    static let calculatorCornerRatio: CGFloat = 0.025
+    /// Single stroke width applied to every stroked element (calc frame,
+    /// display panel, keypad panel, individual keys).
+    static let strokeRatio: CGFloat = 0.006
+
+    /// Corner radii (relative to their respective reference sizes).
+    static let calculatorCornerRatio: CGFloat = 0.04
     static let panelCornerRatio: CGFloat      = 0.025
-    static let keyCornerRatio: CGFloat        = 0.060
-
-    static let calculatorFrameStrokeRatio: CGFloat = 0.004
-    static let panelFrameStrokeRatio: CGFloat      = 0.006
-    static let keyFrameStrokeRatio: CGFloat        = 0.010
+    static let keyCornerRatio: CGFloat        = 0.1
 
     static let extraTopMarginRatio: CGFloat = 0.06
     static let infoButtonRatio: CGFloat     = 0.05
+
+    /// Vertical reserve per side above/below the centered calculator, as a
+    /// ratio of the screen's *short* side. Using the short side keeps the
+    /// reserve consistent across orientations (landscape no longer wastes a
+    /// bunch of height just because it's wide).
+    static let verticalReserveRatio: CGFloat = 0.15
+
+    /// Soft cap on calc width as a fraction of the screen's short side.
+    /// Only kicks in when the calc is height-constrained — which is the
+    /// tablet-portrait case — pulling portrait proportions closer to
+    /// landscape so the two orientations feel less lopsided.
+    static let maxCalcWidthRatio: CGFloat = 0.85
 }
 
 struct CalculatorMetrics {
@@ -38,18 +53,33 @@ struct CalculatorMetrics {
     let panelStroke: CGFloat
     let keyStroke: CGFloat
 
-    static func fit(into available: CGSize) -> CalculatorMetrics {
+    static func fit(into available: CGSize,
+                    maxCalcWidth: CGFloat = .infinity) -> CalculatorMetrics {
         let aspect = CalcLayout.calculatorAspectRatio
         let widthFromHeight = available.height * aspect
-        let calcWidth = min(available.width, widthFromHeight)
+
+        // If height is the tighter constraint (the calc "wants" to be wider
+        // than the screen allows via the aspect ratio), apply `maxCalcWidth`
+        // so portrait tablets don't end up with calcs glued to the edges.
+        // When width is the tighter constraint (phone portrait), leave the
+        // fit alone so the calc can still fill the width.
+        let calcWidth: CGFloat
+        if widthFromHeight < available.width {
+            calcWidth = min(widthFromHeight, maxCalcWidth)
+        } else {
+            calcWidth = available.width
+        }
         let calcHeight = calcWidth / aspect
 
-        let outerPadding = calcWidth * CalcLayout.calculatorOuterPaddingRatio
-        let panelGap     = calcWidth * CalcLayout.panelGapRatio
+        let spacing = calcWidth * CalcLayout.baseSpacingRatio
+        let stroke  = max(1, calcWidth * CalcLayout.strokeRatio)
+
+        let outerPadding = spacing
+        let panelGap     = 2 * spacing
         let panelWidth   = calcWidth - 2 * outerPadding
 
-        let keypadInnerPadding = panelWidth * CalcLayout.panelInnerPaddingRatio
-        let keyGap             = panelWidth * CalcLayout.keyGapRatio
+        let keypadInnerPadding = spacing
+        let keyGap             = spacing
         let keyAvail = panelWidth - 2 * keypadInnerPadding - 3 * keyGap
         let keySize  = keyAvail / 4
         let keypadHeight = 3 * keySize + 2 * keyGap + 2 * keypadInnerPadding
@@ -70,9 +100,9 @@ struct CalculatorMetrics {
             calcCorner: calcWidth * CalcLayout.calculatorCornerRatio,
             panelCorner: panelWidth * CalcLayout.panelCornerRatio,
             keyCorner: keySize * CalcLayout.keyCornerRatio,
-            calcStroke: max(1, calcWidth * CalcLayout.calculatorFrameStrokeRatio),
-            panelStroke: max(1, panelWidth * CalcLayout.panelFrameStrokeRatio),
-            keyStroke: max(1, keySize * CalcLayout.keyFrameStrokeRatio)
+            calcStroke: stroke,
+            panelStroke: stroke,
+            keyStroke: stroke
         )
     }
 }
