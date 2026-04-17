@@ -74,13 +74,18 @@ final class CalculatorState: ObservableObject {
         if integerEntry.isEmpty && fractionalEntry.isEmpty && !inFractional {
             return nil
         }
-        let intTrits  = integerEntry.isEmpty ? [Trit.zero] : strippedLeading(integerEntry)
-        // Deliberately do NOT strip trailing zero fractional trits during
-        // entry — the user typed them and should see them while typing.
-        // Stripping happens once the entry commits to the history.
+        // Pass typed integer trits through unchanged: under the promote
+        // model the LSB integer tri-trit is the typing frontier and any
+        // leading zeros within it (e.g. `||/` for 1) are meaningful — they
+        // tell the user how many trits they've actually typed. Once the
+        // user crosses into fractional, the integer side is no longer the
+        // frontier and the renderer strips it.
+        let intTrits = integerEntry.isEmpty ? [Trit.zero] : integerEntry
+        let latest: LatestTriTrit = inFractional ? .fractional : .integer
         return DisplayTrits(integer: intTrits,
                             fractional: fractionalEntry,
-                            showDecimal: inFractional)
+                            showDecimal: inFractional,
+                            latest: latest)
     }
 
     var entryIsEmpty: Bool {
@@ -368,14 +373,40 @@ final class CalculatorState: ObservableObject {
 // MARK: - BalancedTernary from trit-entry
 
 extension BalancedTernary {
+    /// Convert a typed entry into a `BalancedTernary`. The integer side uses
+    /// the *promote model*: typed trits group into tri-trits in typing order,
+    /// the first 3 typed forming the highest-significance tri-trit and each
+    /// subsequent tri-trit going one slot lower. Within each tri-trit, typing
+    /// is MSB-first (current convention), so a value V in [-13, 13] in tri-trit
+    /// at slot k contributes V · 27^k. The fractional side is unchanged —
+    /// each typed trit goes to its absolute fractional position (-1, -2, …).
     static func from(entryTrits integer: [Trit], fractional: [Trit]) -> BalancedTernary? {
-        var intValue = 0
-        for t in integer {
-            let (mul, o1) = intValue.multipliedReportingOverflow(by: 3)
-            if o1 { return nil }
-            let (sum, o2) = mul.addingReportingOverflow(t.rawValue)
-            if o2 { return nil }
-            intValue = sum
+        var intValue: Int = 0
+        let n = integer.count
+        if n > 0 {
+            let totalTriTrits = (n + 2) / 3
+            for triTritIdx in 0..<totalTriTrits {
+                let start = triTritIdx * 3
+                let end = Swift.min(start + 3, n)
+                var v = 0
+                for j in start..<end {
+                    let (mul, o1) = v.multipliedReportingOverflow(by: 3)
+                    if o1 { return nil }
+                    let (sum, o2) = mul.addingReportingOverflow(integer[j].rawValue)
+                    if o2 { return nil }
+                    v = sum
+                }
+                let slot = totalTriTrits - 1 - triTritIdx
+                var contribution = v
+                for _ in 0..<slot {
+                    let (mul, ovf) = contribution.multipliedReportingOverflow(by: 27)
+                    if ovf { return nil }
+                    contribution = mul
+                }
+                let (sum, ovf) = intValue.addingReportingOverflow(contribution)
+                if ovf { return nil }
+                intValue = sum
+            }
         }
         if fractional.isEmpty {
             return BalancedTernary.from(integer: intValue)

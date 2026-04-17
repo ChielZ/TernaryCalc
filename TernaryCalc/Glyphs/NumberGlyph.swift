@@ -49,8 +49,37 @@ struct FixedNumberRow: View {
     /// = 1/3 at the most-significant end of the slot — and `|/|` → `|/` =
     /// 1/9). All-zero tri-trits collapse to a single `|`. The glyph centers
     /// itself within the slot via `tritCenters`.
+    ///
+    /// Exception: when `display.latest` points at a side, that side's last
+    /// tri-trit is the typing frontier and renders verbatim — every typed
+    /// trit visibly lands, even leading/trailing zeros that would otherwise
+    /// be stripped.
     private var integerSlots: [[Trit]] {
         let raw = display.integer.isEmpty ? [Trit.zero] : display.integer
+        if display.latest == .integer {
+            // Entry mode — group in typing order from the left so the first
+            // 3 typed trits sit in the highest-significance slot and the
+            // last (possibly partial) group is the LSB tri-trit.
+            var groups: [[Trit]] = []
+            var i = 0
+            while i < raw.count {
+                let end = min(i + 3, raw.count)
+                let group = Array(raw[i..<end])
+                let isLast = end == raw.count
+                if isLast {
+                    // Typing frontier — render verbatim.
+                    groups.append(group)
+                } else {
+                    // Locked tri-trit (always 3 trits) — strip leading zeros.
+                    groups.append(stripLeadingZeros(group))
+                }
+                i += 3
+            }
+            return groups
+        }
+        // Committed value (or integer side after the user has moved on into
+        // fractional entry) — pad leading zeros to align to a tri-trit
+        // boundary and strip leading zeros from each group.
         let padCount = (3 - raw.count % 3) % 3
         let padded = Array(repeating: Trit.zero, count: padCount) + raw
         var groups: [[Trit]] = []
@@ -67,11 +96,19 @@ struct FixedNumberRow: View {
         while i < display.fractional.count {
             let end = min(i + 3, display.fractional.count)
             var group = Array(display.fractional[i..<end])
-            // Pad the last fractional group with trailing zeros so its place
-            // values line up with the tri-trit slot (top/middle/bottom = −1,
-            // −2, −3 relative to the slot's most-significant position).
-            while group.count < 3 { group.append(.zero) }
-            groups.append(stripTrailingZeros(group))
+            let isLast = end == display.fractional.count
+            if isLast && display.latest == .fractional {
+                // Typing frontier — render verbatim, even if the slot has
+                // filled to 3 trits (so the user can tell `|/|` apart from
+                // a `|/` that still has room to grow).
+                groups.append(group)
+            } else {
+                // Locked tri-trit — pad to 3 with trailing zeros so place
+                // values align, then strip trailing zeros to show the tri-
+                // trit's value glyph.
+                while group.count < 3 { group.append(.zero) }
+                groups.append(stripTrailingZeros(group))
+            }
             i += 3
         }
         return groups

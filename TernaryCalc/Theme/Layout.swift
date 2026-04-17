@@ -67,7 +67,7 @@ struct CalculatorMetrics {
         if widthFromHeight < available.width {
             calcWidth = min(widthFromHeight, maxCalcWidth)
         } else {
-            calcWidth = available.width * 0.92
+            calcWidth = available.width * 0.928
         }
         let calcHeight = calcWidth / aspect
 

@@ -100,6 +100,17 @@ extension BalancedTernary {
 
 // MARK: - Display conversion
 
+/// Marks which side, if any, holds the *typing frontier* — the last tri-trit
+/// the user is currently filling. The renderer treats that one tri-trit as
+/// "show every typed trit verbatim" while every other tri-trit gets stripped
+/// to its value glyph. `.none` means the value is committed (history rows or
+/// arithmetic results) and every tri-trit gets stripped.
+enum LatestTriTrit: Hashable {
+    case none
+    case integer
+    case fractional
+}
+
 /// One number's display trits, integer + fractional, with the convention used
 /// throughout the app: integer trits are most-significant first; fractional
 /// trits are at positions -1, -2, … (in display order, left to right after the
@@ -111,17 +122,20 @@ struct DisplayTrits: Hashable {
     let integer: [Trit]
     let fractional: [Trit]
     let showDecimal: Bool
+    let latest: LatestTriTrit
 
     init(integer: [Trit], fractional: [Trit]) {
         self.integer = integer
         self.fractional = fractional
         self.showDecimal = !fractional.isEmpty
+        self.latest = .none
     }
 
-    init(integer: [Trit], fractional: [Trit], showDecimal: Bool) {
+    init(integer: [Trit], fractional: [Trit], showDecimal: Bool, latest: LatestTriTrit = .none) {
         self.integer = integer
         self.fractional = fractional
         self.showDecimal = showDecimal
+        self.latest = latest
     }
 }
 
