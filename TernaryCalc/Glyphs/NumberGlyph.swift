@@ -111,6 +111,34 @@ struct FixedNumberRow: View {
     }
 }
 
+/// Overflow row — rendered when an operation produces a value that won't fit.
+/// Each of the six tri-trit slots draws `///` overlaid with `\\\` so every
+/// trit position reads as an `X`, keeping the row in the same stroke / slot
+/// language as the number rows.
+struct OverflowRow: View {
+    let slotSize: CGFloat
+    var color: Color = .black
+    var maxSlots: Int = 6
+    var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<maxSlots, id: \.self) { _ in
+                ZStack {
+                    TritGroupView(trits: [.pos, .pos, .pos],
+                                  color: color,
+                                  strokeFraction: strokeFraction)
+                    TritGroupView(trits: [.neg, .neg, .neg],
+                                  color: color,
+                                  strokeFraction: strokeFraction)
+                }
+                .frame(width: slotSize, height: slotSize)
+            }
+        }
+        .frame(width: slotSize * CGFloat(maxSlots), height: slotSize)
+    }
+}
+
 /// Compute a DisplayTrits that fits `maxSlots` tri-trit slots — truncating
 /// the fractional expansion (re-running the from-below conversion at a
 /// shorter precision) whenever the integer eats into the space available.

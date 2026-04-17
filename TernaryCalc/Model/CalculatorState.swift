@@ -166,20 +166,29 @@ final class CalculatorState: ObservableObject {
 
         if let value = currentEntryValue() {
             if let acc = accumulator, let p = pendingOp {
+                let opsRow = opsRowGlyphs(p, pendingModifiers)
+                let dv = displayFor(value)
                 switch evaluate(acc, p, value, pendingModifiers) {
                 case .success(let r):
-                    guard let dv = displayFor(value), let _ = displayFor(r) else {
-                        markError(); return
+                    if let dv = dv, let _ = displayFor(r) {
+                        accumulator = r
+                        appendRow(.ops(opsRow))
+                        appendRow(.number(dv))
+                    } else {
+                        finalizeWithError(opsRow: opsRow, operandB: dv)
+                        return
                     }
-                    accumulator = r
-                    appendRow(.ops(opsRowGlyphs(p, pendingModifiers)))
-                    appendRow(.number(dv))
-                case .failure: markError(); return
+                case .failure:
+                    finalizeWithError(opsRow: opsRow, operandB: dv)
+                    return
                 }
             } else {
-                guard let dv = displayFor(value) else { markError(); return }
-                accumulator = value
-                appendRow(.number(dv))
+                if let dv = displayFor(value) {
+                    accumulator = value
+                    appendRow(.number(dv))
+                } else {
+                    markError(); return
+                }
             }
             commitEntry()
         }
@@ -194,22 +203,31 @@ final class CalculatorState: ObservableObject {
 
         if let value = currentEntryValue() {
             if let acc = accumulator, let p = pendingOp {
+                let opsRow = opsRowGlyphs(p, pendingModifiers)
+                let dv = displayFor(value)
                 switch evaluate(acc, p, value, pendingModifiers) {
                 case .success(let r):
-                    guard let dv = displayFor(value), let dr = displayFor(r) else {
-                        markError(); return
+                    if let dv = dv, let dr = displayFor(r) {
+                        accumulator = r
+                        appendRow(.ops(opsRow))
+                        appendRow(.number(dv))
+                        appendRow(.ops([.equals]))
+                        appendRow(.number(dr))
+                    } else {
+                        finalizeWithError(opsRow: opsRow, operandB: dv)
+                        return
                     }
-                    accumulator = r
-                    appendRow(.ops(opsRowGlyphs(p, pendingModifiers)))
-                    appendRow(.number(dv))
-                    appendRow(.ops([.equals]))
-                    appendRow(.number(dr))
-                case .failure: markError(); return
+                case .failure:
+                    finalizeWithError(opsRow: opsRow, operandB: dv)
+                    return
                 }
             } else {
-                guard let dv = displayFor(value) else { markError(); return }
-                accumulator = value
-                appendRow(.number(dv))
+                if let dv = displayFor(value) {
+                    accumulator = value
+                    appendRow(.number(dv))
+                } else {
+                    markError(); return
+                }
             }
             commitEntry()
         }
@@ -291,6 +309,26 @@ final class CalculatorState: ObservableObject {
     private func markError() {
         appendRow(.error)
         errored = true
+    }
+
+    /// Finalize the current operation as an error — push the lead-up rows
+    /// (operator + operand B, if available) followed by a synthetic `=` row
+    /// and the error row. This makes the overflow appear in the display as
+    /// the "answer" of the operation, rather than inline between operand and
+    /// operator. Also clears the entry and pending op so no stray `pendingOps`
+    /// / entry row gets appended below the error row in `visibleRows`.
+    private func finalizeWithError(opsRow: [OperatorGlyph]?, operandB: DisplayTrits?) {
+        if let opsRow = opsRow {
+            appendRow(.ops(opsRow))
+        }
+        if let operandB = operandB {
+            appendRow(.number(operandB))
+        }
+        appendRow(.ops([.equals]))
+        markError()
+        commitEntry()
+        pendingOp = nil
+        pendingModifiers = []
     }
 
     // MARK: - Undo stack

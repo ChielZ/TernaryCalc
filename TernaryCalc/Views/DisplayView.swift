@@ -5,8 +5,12 @@ struct DisplayView: View {
     let metrics: CalculatorMetrics
     @Environment(\.ternaryTheme) private var theme
 
-    private let visibleSlots = 5
+    private let visibleSlots = 5   // 3 number rows + 2 op rows
     private let widthSlots   = 6   // 6 tri-trit slots across
+
+    /// Stroke ratio for display operator glyphs — thicker than the digit
+    /// stroke (60/1400) so the operator row doesn't look skinny at small sizes.
+    private let opStrokeRatio: CGFloat = 100.0 / 1400.0
 
     var body: some View {
         ZStack {
@@ -27,69 +31,72 @@ struct DisplayView: View {
 
     @ViewBuilder
     private func content(in size: CGSize) -> some View {
-        // 3 number rows + 2 op rows. Op rows are ~0.35 the height of a number
-        // row. Row gap is small. Solve for slotSize that fits both dimensions.
-        let horizontalPadding = size.width * 0.02
-        let verticalPadding   = size.height * 0.02
-        let innerW = size.width  - 2 * horizontalPadding
+        // Width drives the tri-trit slot size: 6 full tri-trits exactly fill
+        // the content width, so a 6-tri-trit number has equal left/right
+        // margins (both being the trit glyph's built-in 100/1400 slot
+        // padding).
+        let slotSize = size.width / CGFloat(widthSlots)
+
+        // Top/bottom padding equal to the trit-glyph built-in padding, so the
+        // visual top/bottom margins match the left/right margins.
+        let verticalPadding = slotSize * (TritGlyphMetrics.yTop / TritGlyphMetrics.boxSize)
+
+        // Whatever vertical space isn't taken by the 3 number rows is shared
+        // between the 2 operator rows.
         let innerH = size.height - 2 * verticalPadding
-        let opRatio: CGFloat = 0.35
-        let rowGap:  CGFloat = 0.00
-        // totalH = 3 * slot + 2 * slot*opRatio + 4*gap*slot = slot*(3 + 2*opRatio + 4*gap)
-        let heightPerUnit = 3 + 2 * opRatio + 4 * rowGap
-        let slotByW = innerW / CGFloat(widthSlots)
-        let slotByH = innerH / heightPerUnit
-        let slotSize = min(slotByW, slotByH)
-        let opSize   = slotSize * opRatio
-        let gap      = slotSize * rowGap
+        let opHeight = max(0, (innerH - 3 * slotSize) / 2)
 
         let rows = visibleRows()
 
-        VStack(spacing: gap) {
+        VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                rowView(row, slotSize: slotSize, opSize: opSize)
+                rowView(row, slotSize: slotSize, opHeight: opHeight)
             }
-            Spacer(minLength: 0)
         }
+        .padding(.vertical, verticalPadding)
         .frame(width: size.width, height: size.height, alignment: .top)
     }
 
     @ViewBuilder
-    private func rowView(_ row: DisplayRow, slotSize: CGFloat, opSize: CGFloat) -> some View {
+    private func rowView(_ row: DisplayRow, slotSize: CGFloat, opHeight: CGFloat) -> some View {
         switch row {
         case .number(let display):
             FixedNumberRow(display: display, slotSize: slotSize, color: theme.displayDigit)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case .ops(let glyphs):
-            opsRow(glyphs, opSize: opSize)
+            opsRow(glyphs, opHeight: opHeight, slotSize: slotSize)
+                .frame(height: opHeight)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case .error:
-            Text("OVR")
-                .font(.system(size: slotSize * 0.4, weight: .bold))
-                .foregroundStyle(theme.displayDigit)
-                .frame(maxWidth: .infinity, maxHeight: slotSize, alignment: .trailing)
+            OverflowRow(slotSize: slotSize, color: theme.displayDigit)
+                .frame(height: slotSize)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 
-    private func opsRow(_ glyphs: [OperatorGlyph], opSize: CGFloat) -> some View {
-        HStack(spacing: opSize * 0.25) {
+    private func opsRow(_ glyphs: [OperatorGlyph], opHeight: CGFloat, slotSize: CGFloat) -> some View {
+        // Each op glyph is its own 1400-unit box with built-in padding of
+        // 100/1400 of its side. A trailing shift equal to
+        //   (slotSize − opHeight) × 100/1400
+        // aligns the op glyph's ink right-edge with the digit ink right-edge
+        // so the number row and the operator row share the same visual right
+        // margin.
+        let padRatio = TritGlyphMetrics.yTop / TritGlyphMetrics.boxSize
+        let trailingShift = max(0, (slotSize - opHeight) * padRatio)
+        return HStack(spacing: opHeight * 0.25) {
             ForEach(Array(glyphs.enumerated()), id: \.offset) { _, g in
                 OperatorGlyphView(glyph: g,
                                   color: theme.displayOperator,
-                                  strokeFraction: TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize)
-                    .frame(width: opSize, height: opSize)
+                                  strokeFraction: opStrokeRatio)
+                    .frame(width: opHeight, height: opHeight)
             }
         }
         .opacity(theme.displayOperatorOpacity)
+        .padding(.trailing, trailingShift)
     }
 
-    /// History + live pending op + live entry, trimmed to the most recent
-    /// `visibleSlots` rows. Numbers are re-fitted into the fixed-slot display.
     private func visibleRows() -> [DisplayRow] {
-        var rows: [DisplayRow] = []
-        for row in state.history {
-            rows.append(row)
-        }
+        var rows: [DisplayRow] = state.history
         if let live = state.pendingOpsRow {
             rows.append(.ops(live))
         }
@@ -98,6 +105,12 @@ struct DisplayView: View {
         }
         if rows.count > visibleSlots {
             rows = Array(rows.suffix(visibleSlots))
+        }
+        // The top row must be a number/error row, never an ops row — scroll
+        // one more line if trimming to `visibleSlots` leaves an ops row at the
+        // top.
+        while case .ops = rows.first {
+            rows.removeFirst()
         }
         return rows
     }

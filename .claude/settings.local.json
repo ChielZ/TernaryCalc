@@ -8,7 +8,9 @@
       "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,id=7E0A0640-D7C4-4603-A485-552D0D24ACBC' -configuration Debug -derivedDataPath /tmp/TernaryCalcBuild build)",
       "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,name=iPhone 16e' -configuration Debug -derivedDataPath /tmp/TernaryCalcBuild build)",
       "Bash(awk '/^-- iOS/{rt=$0; next} /\\\\\\(/{print rt\"\\\\t\"$0}')",
-      "Bash(/usr/libexec/PlistBuddy *)"
+      "Bash(/usr/libexec/PlistBuddy *)",
+      "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,name=iPhone 16e,OS=26.2' -configuration Debug build)",
+      "Bash(open -a Simulator)"
     ]
   }
 }
