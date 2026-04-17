@@ -77,6 +77,9 @@ final class CalculatorState: ObservableObject {
 
     func type(_ trit: Trit) {
         if errored { return }
+        let newIntCount  = inFractional ? integerEntry.count       : integerEntry.count + 1
+        let newFracCount = inFractional ? fractionalEntry.count + 1 : fractionalEntry.count
+        if !fitsInDisplay(intCount: newIntCount, fracCount: newFracCount) { return }
         if inFractional {
             fractionalEntry.append(trit)
         } else {
@@ -89,12 +92,22 @@ final class CalculatorState: ObservableObject {
         if inFractional {
             let lenMod = fractionalEntry.count % 3
             let needed = lenMod == 0 ? 3 : (3 - lenMod)
+            if !fitsInDisplay(intCount: integerEntry.count,
+                              fracCount: fractionalEntry.count + needed) { return }
             fractionalEntry.append(contentsOf: Array(repeating: .zero, count: needed))
         } else {
             let lenMod = integerEntry.count % 3
             let needed = lenMod == 0 ? 3 : (3 - lenMod)
+            if !fitsInDisplay(intCount: integerEntry.count + needed,
+                              fracCount: fractionalEntry.count) { return }
             integerEntry = Array(repeating: .zero, count: needed) + integerEntry
         }
+    }
+
+    private func fitsInDisplay(intCount: Int, fracCount: Int, maxSlots: Int = 6) -> Bool {
+        let intTT  = max(1, (intCount  + 2) / 3)
+        let fracTT = (fracCount + 2) / 3
+        return intTT + fracTT <= maxSlots
     }
 
     func point() {
@@ -133,24 +146,25 @@ final class CalculatorState: ObservableObject {
         if errored { return }
 
         if let value = currentEntryValue() {
-            // There's a fresh operand. Either it becomes the initial accumulator,
-            // or we evaluate the previous op against it first.
             if let acc = accumulator, let p = pendingOp {
                 switch evaluate(acc, p, value, pendingModifiers) {
                 case .success(let r):
+                    guard let dv = displayFor(value), let _ = displayFor(r) else {
+                        markError(); return
+                    }
                     accumulator = r
                     appendRow(.ops(opsRowGlyphs(p, pendingModifiers)))
-                    appendRow(.number(displayFor(value)))
+                    appendRow(.number(dv))
                 case .failure: markError(); return
                 }
             } else {
+                guard let dv = displayFor(value) else { markError(); return }
                 accumulator = value
-                appendRow(.number(displayFor(value)))
+                appendRow(.number(dv))
             }
             commitEntry()
         }
 
-        // Set new op (replaces any previously-pending op of any kind).
         pendingOp = op
         pendingModifiers = []
     }
@@ -162,16 +176,20 @@ final class CalculatorState: ObservableObject {
             if let acc = accumulator, let p = pendingOp {
                 switch evaluate(acc, p, value, pendingModifiers) {
                 case .success(let r):
+                    guard let dv = displayFor(value), let dr = displayFor(r) else {
+                        markError(); return
+                    }
                     accumulator = r
                     appendRow(.ops(opsRowGlyphs(p, pendingModifiers)))
-                    appendRow(.number(displayFor(value)))
+                    appendRow(.number(dv))
                     appendRow(.ops([.equals]))
-                    appendRow(.number(displayFor(r)))
+                    appendRow(.number(dr))
                 case .failure: markError(); return
                 }
             } else {
+                guard let dv = displayFor(value) else { markError(); return }
                 accumulator = value
-                appendRow(.number(displayFor(value)))
+                appendRow(.number(dv))
             }
             commitEntry()
         }
@@ -242,8 +260,8 @@ final class CalculatorState: ObservableObject {
         inFractional = false
     }
 
-    private func displayFor(_ value: BalancedTernary) -> DisplayTrits {
-        value.toDisplayTrits() ?? DisplayTrits(integer: [.zero], fractional: [])
+    private func displayFor(_ value: BalancedTernary) -> DisplayTrits? {
+        DisplayFit.fit(value, maxSlots: 6)
     }
 
     private func appendRow(_ row: DisplayRow) {

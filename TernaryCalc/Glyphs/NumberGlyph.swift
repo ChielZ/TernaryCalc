@@ -1,32 +1,35 @@
 import SwiftUI
 
-/// Decimal-point dot — a small ring glyph (matches the SVG operator dot).
+/// Decimal-point glyph — a small ring on the baseline of its frame.
 struct PointGlyph: View {
     var color: Color = .black
+    var strokeFraction: CGFloat = 0.11
 
     var body: some View {
         GeometryReader { geo in
             let side = min(geo.size.width, geo.size.height)
-            let radius = side * 0.07
-            let lineWidth = side * 0.04
+            let radius = side * 0.28
+            let lineWidth = side * strokeFraction
             Circle()
                 .strokeBorder(color, lineWidth: lineWidth)
                 .frame(width: radius * 2, height: radius * 2)
-                .position(x: geo.size.width / 2, y: geo.size.height - radius - lineWidth)
+                .position(x: geo.size.width / 2, y: geo.size.height * 0.86)
         }
     }
 }
 
-/// Render a number's integer part as a row of tri-trit glyphs:
-/// the leading (most-significant) tri-trit shows the stripped form (no
-/// leading zeros), all remaining tri-trits show their full 3-trit form so
-/// place value is preserved.
-struct IntegerPartGlyph: View {
-    let trits: [Trit]
+/// One row of `maxSlots` fixed-size tri-trit slots, right-aligned. Empty
+/// leading slots are blank. A decimal-point glyph sits on the boundary
+/// between the integer and fractional slots without consuming a slot.
+struct FixedNumberRow: View {
+    let display: DisplayTrits
+    let slotSize: CGFloat
     var color: Color = .black
+    var maxSlots: Int = 6
+    var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
 
-    private var slots: [[Trit]] {
-        let raw = trits.isEmpty ? [.zero] : trits
+    private var integerSlots: [[Trit]] {
+        let raw = display.integer.isEmpty ? [Trit.zero] : display.integer
         let padCount = (3 - raw.count % 3) % 3
         let padded = Array(repeating: Trit.zero, count: padCount) + raw
         var groups: [[Trit]] = []
@@ -40,57 +43,69 @@ struct IntegerPartGlyph: View {
         return groups
     }
 
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(slots.enumerated()), id: \.offset) { _, trits in
-                TritGroupView(trits: trits, color: color)
-            }
-        }
-    }
-}
-
-/// Render a number's fractional part: tri-trit groups starting from position
-/// -1, with the right-most group possibly truncated to fewer than 3 trits.
-struct FractionalPartGlyph: View {
-    let trits: [Trit]
-    var color: Color = .black
-
-    private var slots: [[Trit]] {
-        guard !trits.isEmpty else { return [] }
+    private var fractionalSlots: [[Trit]] {
+        guard !display.fractional.isEmpty else { return [] }
         var groups: [[Trit]] = []
         var i = 0
-        while i < trits.count {
-            let end = min(i + 3, trits.count)
-            groups.append(Array(trits[i..<end]))
+        while i < display.fractional.count {
+            let end = min(i + 3, display.fractional.count)
+            groups.append(Array(display.fractional[i..<end]))
             i += 3
         }
         return groups
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(slots.enumerated()), id: \.offset) { _, trits in
-                TritGroupView(trits: trits, color: color)
+        let ints  = integerSlots
+        let fracs = fractionalSlots
+        let used  = ints.count + fracs.count
+        let empty = max(0, maxSlots - used)
+        let pointFrameW = slotSize * 0.4
+        let boundaryX = slotSize * CGFloat(empty + ints.count)
+
+        ZStack(alignment: .topLeading) {
+            HStack(spacing: 0) {
+                ForEach(0..<empty, id: \.self) { _ in
+                    Color.clear.frame(width: slotSize, height: slotSize)
+                }
+                ForEach(ints.indices, id: \.self) { i in
+                    TritGroupView(trits: ints[i], color: color, strokeFraction: strokeFraction)
+                        .frame(width: slotSize, height: slotSize)
+                }
+                ForEach(fracs.indices, id: \.self) { i in
+                    TritGroupView(trits: fracs[i], color: color, strokeFraction: strokeFraction)
+                        .frame(width: slotSize, height: slotSize)
+                }
+            }
+            if !fracs.isEmpty {
+                PointGlyph(color: color)
+                    .frame(width: pointFrameW, height: slotSize)
+                    .offset(x: boundaryX - pointFrameW / 2)
             }
         }
+        .frame(width: slotSize * CGFloat(maxSlots), height: slotSize, alignment: .leading)
     }
 }
 
-/// Render a complete number (integer + optional decimal point + optional
-/// fractional). If `displayTrits.fractional` is empty, no point or fractional
-/// section is shown.
-struct NumberGlyph: View {
-    let display: DisplayTrits
-    var color: Color = .black
-
-    var body: some View {
-        HStack(spacing: 0) {
-            IntegerPartGlyph(trits: display.integer, color: color)
-            if !display.fractional.isEmpty {
-                PointGlyph(color: color)
-                    .aspectRatio(1.0/3.0, contentMode: .fit)
-                FractionalPartGlyph(trits: display.fractional, color: color)
-            }
+/// Compute a DisplayTrits that fits `maxSlots` tri-trit slots — truncating
+/// the fractional expansion (re-running the from-below conversion at a
+/// shorter precision) whenever the integer eats into the space available.
+/// Returns nil if even the integer alone doesn't fit.
+enum DisplayFit {
+    static func fit(_ value: BalancedTernary, maxSlots: Int = 6) -> DisplayTrits? {
+        guard let initial = value.toDisplayTrits(maxFractionalTrits: maxSlots * 3) else { return nil }
+        let intSlots = triTritCount(initial.integer)
+        if intSlots > maxSlots { return nil }
+        let availableFracTrits = max(0, (maxSlots - intSlots) * 3)
+        if initial.fractional.count <= availableFracTrits {
+            return initial
         }
+        guard let shorter = value.toDisplayTrits(maxFractionalTrits: availableFracTrits) else { return nil }
+        if triTritCount(shorter.integer) > maxSlots { return nil }
+        return shorter
+    }
+
+    static func triTritCount(_ trits: [Trit]) -> Int {
+        trits.isEmpty ? 0 : (trits.count + 2) / 3
     }
 }
