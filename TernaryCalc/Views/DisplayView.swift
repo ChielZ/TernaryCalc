@@ -8,9 +8,11 @@ struct DisplayView: View {
     private let visibleSlots = 5   // 3 number rows + 2 op rows
     private let widthSlots   = 6   // 6 tri-trit slots across
 
-    /// Stroke ratio for display operator glyphs — thicker than the digit
-    /// stroke (60/1400) so the operator row doesn't look skinny at small sizes.
-    private let opStrokeRatio: CGFloat = 100.0 / 1400.0
+    /// Stroke ratio for display operator glyphs. The op symbol frame is
+    /// `slotSize/2`, so a stroke ratio of 120/1400 yields an absolute stroke
+    /// width of `slotSize · 60/1400` — exactly the digit stroke. Since the
+    /// op glyph is smaller, this reads as relatively bolder than the digits.
+    private let opStrokeRatio: CGFloat = 120.0 / 1400.0
 
     var body: some View {
         ZStack {
@@ -86,20 +88,27 @@ struct DisplayView: View {
     }
 
     private func opsRow(_ glyphs: [OperatorGlyph], opHeight: CGFloat, slotSize: CGFloat) -> some View {
-        // Each op glyph is its own 1400-unit box with built-in padding of
-        // 100/1400 of its side. A trailing shift equal to
-        //   (slotSize − opHeight) × 100/1400
-        // aligns the op glyph's ink right-edge with the digit ink right-edge
-        // so the number row and the operator row share the same visual right
-        // margin.
-        let padRatio = TritGlyphMetrics.yTop / TritGlyphMetrics.boxSize
-        let trailingShift = max(0, (slotSize - opHeight) * padRatio)
-        return HStack(spacing: opHeight * 0.25) {
+        // Op symbols are sized to half the digit (number) symbol height,
+        // independent of the row height — the row may be taller and the
+        // symbol gets vertically centered inside it.
+        //
+        // Right-margin alignment: the op glyph's design box runs to x=1300
+        // (= 100/1400 padding from its frame right), but trits don't extend
+        // to the design-box edge — a single `/` reaches design x=900, leaving
+        // a 500/1400 right margin in its slot. To match that, we trail-shift
+        // the op so its ink right-edge sits at the same column. With op frame
+        // = slotSize/2, the inside-frame padding of 100/1400 contributes
+        // (slotSize/2)·100/1400 = slotSize·50/1400; the remaining shift to
+        // hit slotSize·500/1400 from the row's right edge is slotSize·
+        // 450/1400.
+        let opSymbolSize = slotSize / 2
+        let trailingShift = slotSize * (50.0 / 1400.0)
+        return HStack(spacing: opSymbolSize * 0.25) {
             ForEach(Array(glyphs.enumerated()), id: \.offset) { _, g in
                 OperatorGlyphView(glyph: g,
                                   color: theme.displayOperator,
                                   strokeFraction: opStrokeRatio)
-                    .frame(width: opHeight, height: opHeight)
+                    .frame(width: opSymbolSize, height: opSymbolSize)
             }
         }
         .opacity(theme.displayOperatorOpacity)

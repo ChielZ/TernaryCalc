@@ -1,8 +1,6 @@
 import SwiftUI
 
 enum CalcLayout {
-    static let calculatorAspectRatio: CGFloat = 11.0 / 16.0
-
     /// Base spacing unit, as a ratio of `calcWidth`. Used for:
     /// - padding between the calc outer edge and the display/keypad panels,
     /// - padding inside the keypad panel (between its edge and the keys),
@@ -55,21 +53,32 @@ struct CalculatorMetrics {
 
     static func fit(into available: CGSize,
                     maxCalcWidth: CGFloat = .infinity) -> CalculatorMetrics {
-        let aspect = CalcLayout.calculatorAspectRatio
-        let widthFromHeight = available.height * aspect
+        // The calc's overall aspect is no longer a free constant — display
+        // and keypad panels are the same height by design, so calcHeight is
+        // determined entirely by calcWidth and the spacing ratios:
+        //   keySizeRatio       = (1 − 7s) / 4          (s = baseSpacingRatio)
+        //   keypadHeightRatio  = 3·keySizeRatio + 4s
+        //   heightOverWidth    = 2·keypadHeightRatio + 4s
+        //                      = display + keypad + 2·outer + 1·panelGap
+        let s = CalcLayout.baseSpacingRatio
+        let keySizeRatio      = (1 - 7 * s) / 4
+        let keypadHeightRatio = 3 * keySizeRatio + 4 * s
+        let heightOverWidth   = 2 * keypadHeightRatio + 4 * s
+
+        let widthFromHeight = available.height / heightOverWidth
 
         // If height is the tighter constraint (the calc "wants" to be wider
-        // than the screen allows via the aspect ratio), apply `maxCalcWidth`
-        // so portrait tablets don't end up with calcs glued to the edges.
-        // When width is the tighter constraint (phone portrait), leave the
-        // fit alone so the calc can still fill the width.
+        // than the screen allows via aspect), apply `maxCalcWidth` so portrait
+        // tablets don't end up with calcs glued to the edges. When width is
+        // the tighter constraint (phone portrait), still leave a small margin
+        // (the 0.928 factor) so the calc doesn't kiss the screen edges.
         let calcWidth: CGFloat
         if widthFromHeight < available.width {
             calcWidth = min(widthFromHeight, maxCalcWidth)
         } else {
             calcWidth = available.width * 0.928
         }
-        let calcHeight = calcWidth / aspect
+        let calcHeight = calcWidth * heightOverWidth
 
         let spacing = calcWidth * CalcLayout.baseSpacingRatio
         let stroke  = max(1, calcWidth * CalcLayout.strokeRatio)
@@ -84,7 +93,7 @@ struct CalculatorMetrics {
         let keySize  = keyAvail / 4
         let keypadHeight = 3 * keySize + 2 * keyGap + 2 * keypadInnerPadding
 
-        let displayHeight = calcHeight - keypadHeight - 2 * outerPadding - panelGap
+        let displayHeight = keypadHeight
 
         return CalculatorMetrics(
             calcWidth: calcWidth,
