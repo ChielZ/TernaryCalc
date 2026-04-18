@@ -28,6 +28,7 @@ struct ContentView: View {
                 InfoButton(size: infoSize)
                     .position(x: size.width / 2,
                               y: size.height / 2 - metrics.calcHeight / 2 - infoGap - infoSize / 2)
+                    .hidden()
             }
         }
         .ignoresSafeArea()
