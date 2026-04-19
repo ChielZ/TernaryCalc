@@ -1,0 +1,11 @@
+This is a balanced ternary calculator, a companion piece to the balanced ternary clock. It uses the same trit alphabet — '\', '|', '/' — to add, multiply, flip, and invert numbers.
+
+The clock groups its trits into clusters of three, one cluster each for hours, minutes and seconds. This calculator does the same thing for place value. Three trits together form a 'tri-trit', which can represent any of 27 values from −13 to +13. You can think of a tri-trit as a single digit in base 27 — but one where the negative half is a literal mirror image of the positive half, and zero sits precisely at the center.
+
+Numbers are entered one trit at a time on the three trit keys. Small values fit inside a single tri-trit: '/' gives you one, '/\' gives you two, '/|/' gives you ten — anything from −13 to +13 can be entered with at most three trits. To go past thirteen, fill out the current tri-trit first (typing leading zeros if needed) and the next keypress starts a new tri-trit, shifting the existing one up by a factor of 27 — the same way typing a digit after '9' shifts the '9' into the tens column.
+
+The decimal point works symmetrically: to its right, each tri-trit holds place values of 1/3, 1/9 and 1/27, and so on, nesting into another base-27 structure. The display strips leading zeros on the integer side and trailing zeros on the fractional side, so the significant trits always cluster toward the decimal point.
+
+There are five operations. Addition (+) and multiplication (→) work as you'd expect, with the small twist that multiplication has a mirror twin (←), in which '\' plays the role of the identity instead of '/'. There is no subtraction key — 'flip' mirrors a number into its negative, which is all that subtraction really is in a system where negativity is already built in. Likewise there is no division key — 'invert' produces the reciprocal. Flip and invert can also be attached to the binary operations as modifiers, so '+ flip' behaves like subtraction, '→ invert' like division, and so on.
+
+Like the clock, this calculator leans into the native symmetries of balanced ternary: 'minus one' is the left-right flip of 'one', every number sits at some distance either side of a single center, and there is no special state for 'negative' — just a direction, with '|' at the fulcrum.

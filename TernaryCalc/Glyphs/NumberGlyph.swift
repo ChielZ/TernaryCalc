@@ -56,29 +56,35 @@ struct FixedNumberRow: View {
     /// be stripped.
     private var integerSlots: [[Trit]] {
         let raw = display.integer.isEmpty ? [Trit.zero] : display.integer
-        if display.latest == .integer {
-            // Entry mode — group in typing order from the left so the first
-            // 3 typed trits sit in the highest-significance slot and the
-            // last (possibly partial) group is the LSB tri-trit.
+        if display.latest != .none {
+            // Entry mode (promote model) — applies whether the typing
+            // frontier is on the integer or the fractional side. We must
+            // group the typed integer trits the same way the value model
+            // does: from the left in typing order, so the first 3 typed
+            // sit in the highest-significance slot and the last (possibly
+            // partial) group is the LSB tri-trit. Otherwise the displayed
+            // value would diverge from the value used for calculation as
+            // soon as the user pressed `.`.
             var groups: [[Trit]] = []
             var i = 0
             while i < raw.count {
                 let end = min(i + 3, raw.count)
                 let group = Array(raw[i..<end])
                 let isLast = end == raw.count
-                if isLast {
-                    // Typing frontier — render verbatim.
+                // The integer-side last tri-trit only renders verbatim when
+                // the integer side is the typing frontier. Once the user
+                // crosses into fractional, all integer tri-trits are locked
+                // and get stripped to their value glyph.
+                if isLast && display.latest == .integer {
                     groups.append(group)
                 } else {
-                    // Locked tri-trit (always 3 trits) — strip leading zeros.
                     groups.append(stripLeadingZeros(group))
                 }
                 i += 3
             }
             return groups
         }
-        // Committed value (or integer side after the user has moved on into
-        // fractional entry) — pad leading zeros to align to a tri-trit
+        // Committed value — pad leading zeros to align to a tri-trit
         // boundary and strip leading zeros from each group.
         let padCount = (3 - raw.count % 3) % 3
         let padded = Array(repeating: Trit.zero, count: padCount) + raw
@@ -156,11 +162,26 @@ struct FixedNumberRow: View {
                 }
             }
             if display.showDecimal {
+                // Right dot: between the 1s tri-trit (slot 0) and the first
+                // fractional tri-trit. Standard position; always shown when
+                // a decimal is in play.
                 PointGlyph(color: color,
                            strokeFraction: strokeFraction,
                            placement: .centered)
                     .frame(width: pointFrameW, height: slotSize)
                     .offset(x: boundaryX - pointFrameW / 2)
+                // Left dot: between the 1s tri-trit and the 27s tri-trit.
+                // Only meaningful when there's actually a 27s tri-trit to
+                // mark off — i.e. when the integer part exceeds ±13 and so
+                // spans more than one tri-trit slot. Below that threshold
+                // it's just visual noise.
+                if ints.count > 1 {
+                    PointGlyph(color: color,
+                               strokeFraction: strokeFraction,
+                               placement: .centered)
+                        .frame(width: pointFrameW, height: slotSize)
+                        .offset(x: boundaryX - slotSize - pointFrameW / 2)
+                }
             }
         }
         .frame(width: slotSize * CGFloat(maxSlots), height: slotSize, alignment: .leading)

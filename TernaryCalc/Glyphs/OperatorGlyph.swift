@@ -61,6 +61,15 @@ struct OperatorShape: Shape {
             p.move(to: P(700, 700));  p.addLine(to: P(1300, 700))
 
         case .flip:
+            // Vertical diamond (4 arms from top & bottom apexes) + horizontal
+            // line. The vertical line through the arrow points is omitted.
+            p.move(to: P(700, 100));  p.addLine(to: P(500, 700))
+            p.move(to: P(700, 100));  p.addLine(to: P(900, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(500, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(900, 700))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
+
+        case .invert:
             // Horizontal diamond (4 arrow arms from left & right apexes) + `|`.
             // The horizontal line through the arrow points is intentionally
             // omitted — only the vertical `|` stays.
@@ -69,16 +78,6 @@ struct OperatorShape: Shape {
             p.move(to: P(1300, 700)); p.addLine(to: P(700, 500))
             p.move(to: P(1300, 700)); p.addLine(to: P(700, 900))
             p.move(to: P(700, 100));  p.addLine(to: P(700, 1300))
-
-        case .invert:
-            // flip rotated 90° CW around (700,700): (x,y) → (y, 1400-x).
-            // Vertical diamond (4 arms from top & bottom apexes) + horizontal
-            // line. The vertical line through the arrow points is omitted.
-            p.move(to: P(700, 100));  p.addLine(to: P(500, 700))
-            p.move(to: P(700, 100));  p.addLine(to: P(900, 700))
-            p.move(to: P(700, 1300)); p.addLine(to: P(500, 700))
-            p.move(to: P(700, 1300)); p.addLine(to: P(900, 700))
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
 
         case .backspace:
             // `<`: two arms from a left apex to the right edge, joined at
