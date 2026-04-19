@@ -61,23 +61,26 @@ struct OperatorShape: Shape {
             p.move(to: P(700, 700));  p.addLine(to: P(1300, 700))
 
         case .flip:
-            // Vertical diamond (4 arms from top & bottom apexes) + horizontal
-            // line. The vertical line through the arrow points is omitted.
-            p.move(to: P(700, 100));  p.addLine(to: P(500, 700))
-            p.move(to: P(700, 100));  p.addLine(to: P(900, 700))
-            p.move(to: P(700, 1300)); p.addLine(to: P(500, 700))
-            p.move(to: P(700, 1300)); p.addLine(to: P(900, 700))
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
-
-        case .invert:
-            // Horizontal diamond (4 arrow arms from left & right apexes) + `|`.
-            // The horizontal line through the arrow points is intentionally
-            // omitted — only the vertical `|` stays.
+            // Horizontal diamond (4 arms from left & right apexes) + the
+            // vertical `|` running through its center. The vertical bar IS
+            // the zero-trit glyph — flip's fixed point is zero, so the
+            // operator is literally labelled by the value it leaves alone.
             p.move(to: P(100, 700));  p.addLine(to: P(700, 500))
             p.move(to: P(100, 700));  p.addLine(to: P(700, 900))
             p.move(to: P(1300, 700)); p.addLine(to: P(700, 500))
             p.move(to: P(1300, 700)); p.addLine(to: P(700, 900))
             p.move(to: P(700, 100));  p.addLine(to: P(700, 1300))
+
+        case .invert:
+            // Vertical diamond (4 arms from top & bottom apexes) + a
+            // horizontal bar running through its center. The horizontal bar
+            // stands in for "one absolute" — invert's fixed point is one,
+            // mirroring the flip-zero relationship.
+            p.move(to: P(700, 100));  p.addLine(to: P(500, 700))
+            p.move(to: P(700, 100));  p.addLine(to: P(900, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(500, 700))
+            p.move(to: P(700, 1300)); p.addLine(to: P(900, 700))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 700))
 
         case .backspace:
             // `<`: two arms from a left apex to the right edge, joined at
