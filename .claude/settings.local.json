@@ -13,7 +13,8 @@
       "Bash(open -a Simulator)",
       "Bash(wait)",
       "Bash(python3 -c \"import sys, json; data = sys.stdin.read\\(\\); first_nl = data.index\\('\\\\n'\\); meta = json.loads\\(data[:first_nl]\\); report = json.loads\\(data[first_nl:]\\); print\\('exception:', report.get\\('exception', {}\\)\\); print\\('---'\\); frames = report.get\\('threads', [{}]\\)[0].get\\('frames', []\\)[:20]; [print\\(f.get\\('imageIndex'\\), hex\\(f.get\\('imageOffset', 0\\)\\), f.get\\('symbol', '?'\\)\\) for f in frames]\")",
-      "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,name=iPhone 16e,OS=26.2' clean build)"
+      "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,name=iPhone 16e,OS=26.2' clean build)",
+      "Bash(xcodebuild -project TernaryCalc.xcodeproj -scheme TernaryCalc -destination 'platform=iOS Simulator,name=iPhone 17' -configuration Debug build)"
     ]
   }
 }

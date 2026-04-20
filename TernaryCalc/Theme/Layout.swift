@@ -18,7 +18,7 @@ enum CalcLayout {
     static let keyCornerRatio: CGFloat        = 0.1
 
     static let extraTopMarginRatio: CGFloat = 0.06
-    static let infoButtonRatio: CGFloat     = 0.05
+    static let infoButtonRatio: CGFloat     = 0.075
 
     /// Vertical reserve per side above/below the centered calculator, as a
     /// ratio of the screen's *short* side. Using the short side keeps the

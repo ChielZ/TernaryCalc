@@ -4,9 +4,13 @@ struct DisplayView: View {
     @ObservedObject var state: CalculatorState
     let metrics: CalculatorMetrics
     @Environment(\.ternaryTheme) private var theme
+    @Environment(\.ternaryDisplayMode) private var displayMode
 
     private let visibleSlots = 5   // 3 number rows + 2 op rows
-    private let widthSlots   = 6   // 6 tri-trit slots across
+    private let widthSlots   = 6   // 6 tri-trit slot-widths across — the row
+                                   // height always tracks this (one tri-trit-
+                                   // wide square), so number rows stay the
+                                   // same size in both modes.
 
     /// Stroke ratio for display operator glyphs. The op symbol frame is
     /// `slotSize/2`, so a stroke ratio of 120/1400 yields an absolute stroke
@@ -58,7 +62,7 @@ struct DisplayView: View {
                 if index > 0, isNonOpRow(row), isNonOpRow(rows[index - 1]) {
                     Color.clear.frame(height: opHeight)
                 }
-                rowView(row, slotSize: slotSize, opHeight: opHeight)
+                rowView(row, slotSize: slotSize, panelWidth: size.width, opHeight: opHeight)
             }
         }
         .padding(.vertical, verticalPadding)
@@ -71,19 +75,46 @@ struct DisplayView: View {
     }
 
     @ViewBuilder
-    private func rowView(_ row: DisplayRow, slotSize: CGFloat, opHeight: CGFloat) -> some View {
+    private func rowView(_ row: DisplayRow, slotSize: CGFloat, panelWidth: CGFloat, opHeight: CGFloat) -> some View {
         switch row {
         case .number(let display):
-            FixedNumberRow(display: display, slotSize: slotSize, color: theme.displayDigit)
+            numberRow(display, slotSize: slotSize, panelWidth: panelWidth)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case .ops(let glyphs):
             opsRow(glyphs, opHeight: opHeight, slotSize: slotSize)
                 .frame(height: opHeight)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         case .error:
-            OverflowRow(slotSize: slotSize, color: theme.displayDigit)
+            errorRow(slotSize: slotSize, panelWidth: panelWidth)
                 .frame(height: slotSize)
                 .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
+
+    @ViewBuilder
+    private func numberRow(_ display: DisplayTrits, slotSize: CGFloat, panelWidth: CGFloat) -> some View {
+        switch displayMode {
+        case .triTrit:
+            FixedNumberRow(display: display, slotSize: slotSize, color: theme.displayDigit)
+        case .simple:
+            SimpleNumberRow(display: display,
+                            glyphSize: slotSize,
+                            panelWidth: panelWidth,
+                            color: theme.displayDigit,
+                            maxSlots: displayMode.rowCapacity)
+        }
+    }
+
+    @ViewBuilder
+    private func errorRow(slotSize: CGFloat, panelWidth: CGFloat) -> some View {
+        switch displayMode {
+        case .triTrit:
+            OverflowRow(slotSize: slotSize, color: theme.displayDigit)
+        case .simple:
+            SimpleOverflowRow(glyphSize: slotSize,
+                              panelWidth: panelWidth,
+                              color: theme.displayDigit,
+                              maxSlots: displayMode.rowCapacity)
         }
     }
 

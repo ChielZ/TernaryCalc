@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var state = CalculatorState()
     @Environment(\.ternaryTheme) private var theme
+    @Environment(\.ternaryDisplayMode) private var displayMode
+    @State private var showingSettings = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -25,14 +27,20 @@ struct ContentView: View {
                 CalculatorView(state: state, metrics: metrics)
                     .position(x: size.width / 2, y: size.height / 2)
 
-                InfoButton(size: infoSize)
-                    .position(x: size.width / 2,
-                              y: size.height / 2 - metrics.calcHeight / 2 - infoGap - infoSize / 2)
-                    .hidden()
+                InfoButton(size: infoSize) {
+                    showingSettings = true
+                }
+                .position(x: size.width / 2,
+                          y: size.height / 2 - metrics.calcHeight / 2 - 2 * infoGap - infoSize / 2)
             }
         }
         .ignoresSafeArea()
         .statusBarHidden(true)
+        .sheet(isPresented: $showingSettings) {
+            InfoSettingsView()
+        }
+        .onAppear { state.setDisplayMode(displayMode) }
+        .onChange(of: displayMode) { _, new in state.setDisplayMode(new) }
     }
 }
 

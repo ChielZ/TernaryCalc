@@ -31,11 +31,15 @@ struct InfoButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "info.circle")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: size, height: size)
-                .foregroundStyle(theme.calculatorBackground)
+            ZStack {
+                Circle()
+                    .strokeBorder(theme.calculatorBackground,
+                                  lineWidth: size * 0.08)
+                Text("i")
+                    .font(.custom("Comfortaa", size: size * 0.7))
+                    .foregroundStyle(theme.calculatorBackground)
+            }
+            .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Info")

@@ -162,29 +162,90 @@ struct FixedNumberRow: View {
                 }
             }
             if display.showDecimal {
-                // Right dot: between the 1s tri-trit (slot 0) and the first
-                // fractional tri-trit. Standard position; always shown when
-                // a decimal is in play.
                 PointGlyph(color: color,
                            strokeFraction: strokeFraction,
                            placement: .centered)
                     .frame(width: pointFrameW, height: slotSize)
                     .offset(x: boundaryX - pointFrameW / 2)
-                // Left dot: between the 1s tri-trit and the 27s tri-trit.
-                // Only meaningful when there's actually a 27s tri-trit to
-                // mark off — i.e. when the integer part exceeds ±13 and so
-                // spans more than one tri-trit slot. Below that threshold
-                // it's just visual noise.
-                if ints.count > 1 {
-                    PointGlyph(color: color,
-                               strokeFraction: strokeFraction,
-                               placement: .centered)
-                        .frame(width: pointFrameW, height: slotSize)
-                        .offset(x: boundaryX - slotSize - pointFrameW / 2)
-                }
             }
         }
         .frame(width: slotSize * CGFloat(maxSlots), height: slotSize, alignment: .leading)
+    }
+}
+
+/// Simple-ternary number row — a flat sequence of single-trit slots, right-
+/// aligned. Each glyph is rendered at tri-trit-mode size (same height and
+/// stroke) in a `glyphSize × glyphSize` frame; those frames are positioned
+/// along the row at a narrower pitch (`panelWidth / maxSlots`), so adjacent
+/// layout slots overlap. Since a trit's drawn extent is only ~29% of its
+/// frame width, the strokes stay well separated. Decimal point sits on the
+/// boundary between the last integer and first fractional slot.
+struct SimpleNumberRow: View {
+    let display: DisplayTrits
+    let glyphSize: CGFloat
+    let panelWidth: CGFloat
+    var color: Color = .black
+    var maxSlots: Int = 12
+    var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
+
+    var body: some View {
+        let ints  = display.integer.isEmpty ? [Trit.zero] : display.integer
+        let fracs = display.fractional
+        let reservePlaceholder = display.showDecimal && fracs.isEmpty
+        let used  = ints.count + fracs.count + (reservePlaceholder ? 1 : 0)
+        let empty = max(0, maxSlots - used)
+        let slotPitch = panelWidth / CGFloat(maxSlots)
+        let pointFrameW = slotPitch
+        let decimalX = slotPitch * CGFloat(empty + ints.count)
+        // Glyph frame's left edge so that its center sits on slot i's center.
+        let glyphX: (Int) -> CGFloat = { slotIndex in
+            slotPitch * (CGFloat(slotIndex) + 0.5) - glyphSize / 2
+        }
+
+        ZStack(alignment: .topLeading) {
+            ForEach(ints.indices, id: \.self) { j in
+                TritGroupView(trits: [ints[j]], color: color, strokeFraction: strokeFraction)
+                    .frame(width: glyphSize, height: glyphSize)
+                    .offset(x: glyphX(empty + j))
+            }
+            ForEach(fracs.indices, id: \.self) { k in
+                TritGroupView(trits: [fracs[k]], color: color, strokeFraction: strokeFraction)
+                    .frame(width: glyphSize, height: glyphSize)
+                    .offset(x: glyphX(empty + ints.count + k))
+            }
+            if display.showDecimal {
+                PointGlyph(color: color,
+                           strokeFraction: strokeFraction,
+                           placement: .centered)
+                    .frame(width: pointFrameW, height: glyphSize)
+                    .offset(x: decimalX - pointFrameW / 2)
+            }
+        }
+        .frame(width: panelWidth, height: glyphSize, alignment: .leading)
+    }
+}
+
+/// Simple-mode overflow row — one `X` per trit slot, at tri-trit glyph size.
+struct SimpleOverflowRow: View {
+    let glyphSize: CGFloat
+    let panelWidth: CGFloat
+    var color: Color = .black
+    var maxSlots: Int = 12
+    var strokeFraction: CGFloat = TritGlyphMetrics.strokeWidth / TritGlyphMetrics.boxSize
+
+    var body: some View {
+        let slotPitch = panelWidth / CGFloat(maxSlots)
+        ZStack(alignment: .topLeading) {
+            ForEach(0..<maxSlots, id: \.self) { i in
+                ZStack {
+                    TritGroupView(trits: [.pos], color: color, strokeFraction: strokeFraction)
+                    TritGroupView(trits: [.neg], color: color, strokeFraction: strokeFraction)
+                }
+                .frame(width: glyphSize, height: glyphSize)
+                .offset(x: slotPitch * (CGFloat(i) + 0.5) - glyphSize / 2)
+            }
+        }
+        .frame(width: panelWidth, height: glyphSize, alignment: .leading)
     }
 }
 
@@ -236,5 +297,22 @@ enum DisplayFit {
 
     static func triTritCount(_ trits: [Trit]) -> Int {
         trits.isEmpty ? 0 : (trits.count + 2) / 3
+    }
+
+    /// Simple-mode fit: budget is `maxTrits` raw single-trit slots. If the
+    /// integer part uses N of them, the fractional part gets `maxTrits - N`
+    /// (re-running the conversion at that precision so the approach-from-
+    /// below truncation remains correct).
+    static func fitSimple(_ value: BalancedTernary, maxTrits: Int = 12) -> DisplayTrits? {
+        guard let initial = value.toDisplayTrits(maxFractionalTrits: maxTrits) else { return nil }
+        let intCount = max(1, initial.integer.count)
+        if intCount > maxTrits { return nil }
+        let availableFrac = max(0, maxTrits - intCount)
+        if initial.fractional.count <= availableFrac {
+            return initial
+        }
+        guard let shorter = value.toDisplayTrits(maxFractionalTrits: availableFrac) else { return nil }
+        if max(1, shorter.integer.count) > maxTrits { return nil }
+        return shorter
     }
 }

@@ -50,6 +50,12 @@ final class CalculatorState: ObservableObject {
 
     @Published private(set) var errored: Bool = false
 
+    @Published private(set) var displayMode: TernaryDisplayMode = .triTrit
+
+    /// Total display capacity, expressed in the mode's native unit (tri-trit
+    /// or single trit). One unit = one glyph column in the number row.
+    private var maxUnits: Int { displayMode.rowCapacity }
+
     /// Stack of past states (most recent last). Every mutating key press
     /// pushes onto this stack first; backspace pops and restores. This gives
     /// full-fidelity undo — not just "delete last trit" — at the cost of ~a
@@ -74,12 +80,11 @@ final class CalculatorState: ObservableObject {
         if integerEntry.isEmpty && fractionalEntry.isEmpty && !inFractional {
             return nil
         }
-        // Pass typed integer trits through unchanged: under the promote
-        // model the LSB integer tri-trit is the typing frontier and any
-        // leading zeros within it (e.g. `||/` for 1) are meaningful — they
-        // tell the user how many trits they've actually typed. Once the
-        // user crosses into fractional, the integer side is no longer the
-        // frontier and the renderer strips it.
+        // Pass typed integer trits through unchanged. In tri-trit mode the
+        // LSB tri-trit is the typing frontier and its leading zeros carry
+        // meaning (they tell the user how far they've typed into it); once
+        // fractional entry begins, that tri-trit gets stripped. In simple
+        // mode there's no grouping, so the `latest` flag is harmless noise.
         let intTrits = integerEntry.isEmpty ? [Trit.zero] : integerEntry
         let latest: LatestTriTrit = inFractional ? .fractional : .integer
         return DisplayTrits(integer: intTrits,
@@ -123,10 +128,16 @@ final class CalculatorState: ObservableObject {
         restore(snap)
     }
 
-    private func fitsInDisplay(intCount: Int, fracCount: Int, maxSlots: Int = 6) -> Bool {
-        let intTT  = max(1, (intCount  + 2) / 3)
-        let fracTT = (fracCount + 2) / 3
-        return intTT + fracTT <= maxSlots
+    private func fitsInDisplay(intCount: Int, fracCount: Int) -> Bool {
+        switch displayMode {
+        case .triTrit:
+            let intTT  = max(1, (intCount  + 2) / 3)
+            let fracTT = (fracCount + 2) / 3
+            return intTT + fracTT <= maxUnits
+        case .simple:
+            let int = max(1, intCount)
+            return int + fracCount <= maxUnits
+        }
     }
 
     func point() {
@@ -146,6 +157,23 @@ final class CalculatorState: ObservableObject {
         pendingOp = nil
         pendingModifiers = []
         errored = false
+    }
+
+    /// Switch between tri-trit and simple-ternary modes. Always resets the
+    /// calculator — history rows are pre-formatted `DisplayTrits` that don't
+    /// translate between modes, and mixing the two would be confusing anyway.
+    func setDisplayMode(_ mode: TernaryDisplayMode) {
+        guard mode != displayMode else { return }
+        displayMode = mode
+        integerEntry.removeAll()
+        fractionalEntry.removeAll()
+        inFractional = false
+        history.removeAll()
+        accumulator = nil
+        pendingOp = nil
+        pendingModifiers = []
+        errored = false
+        undoStack.removeAll()
     }
 
     /// `flip` and `invert` are now MODIFIERS attached to the pending op.
@@ -293,8 +321,14 @@ final class CalculatorState: ObservableObject {
 
     private func currentEntryValue() -> BalancedTernary? {
         if entryIsEmpty { return nil }
-        return BalancedTernary.from(entryTrits: integerEntry,
-                                    fractional: fractionalEntry)
+        switch displayMode {
+        case .triTrit:
+            return BalancedTernary.from(entryTrits: integerEntry,
+                                        fractional: fractionalEntry)
+        case .simple:
+            return BalancedTernary.fromSimpleEntry(integer: integerEntry,
+                                                   fractional: fractionalEntry)
+        }
     }
 
     private func commitEntry() {
@@ -304,7 +338,10 @@ final class CalculatorState: ObservableObject {
     }
 
     private func displayFor(_ value: BalancedTernary) -> DisplayTrits? {
-        DisplayFit.fit(value, maxSlots: 6)
+        switch displayMode {
+        case .triTrit: return DisplayFit.fit(value, maxSlots: displayMode.rowCapacity)
+        case .simple:  return DisplayFit.fitSimple(value, maxTrits: displayMode.rowCapacity)
+        }
     }
 
     private func appendRow(_ row: DisplayRow) {
@@ -380,6 +417,40 @@ extension BalancedTernary {
     /// is MSB-first (current convention), so a value V in [-13, 13] in tri-trit
     /// at slot k contributes V · 27^k. The fractional side is unchanged —
     /// each typed trit goes to its absolute fractional position (-1, -2, …).
+    /// Simple-ternary entry: integer trits are a flat base-3 positional
+    /// digit sequence (MSB-first), with no tri-trit grouping or promotion.
+    /// Fractional side is identical to the tri-trit path.
+    static func fromSimpleEntry(integer: [Trit], fractional: [Trit]) -> BalancedTernary? {
+        var intValue = 0
+        for t in integer {
+            let (mul, o1) = intValue.multipliedReportingOverflow(by: 3)
+            if o1 { return nil }
+            let (sum, o2) = mul.addingReportingOverflow(t.rawValue)
+            if o2 { return nil }
+            intValue = sum
+        }
+        if fractional.isEmpty {
+            return BalancedTernary.from(integer: intValue)
+        }
+        var fracNum = 0
+        var pow3 = 1
+        for t in fractional {
+            let (mul, o1) = fracNum.multipliedReportingOverflow(by: 3)
+            if o1 { return nil }
+            let (sum, o2) = mul.addingReportingOverflow(t.rawValue)
+            if o2 { return nil }
+            fracNum = sum
+            let (np, o3) = pow3.multipliedReportingOverflow(by: 3)
+            if o3 { return nil }
+            pow3 = np
+        }
+        let (intScaled, o4) = intValue.multipliedReportingOverflow(by: pow3)
+        if o4 { return nil }
+        let (totalNum, o5) = intScaled.addingReportingOverflow(fracNum)
+        if o5 { return nil }
+        return BalancedTernary.make(numerator: totalNum, denominator: pow3)
+    }
+
     static func from(entryTrits integer: [Trit], fractional: [Trit]) -> BalancedTernary? {
         var intValue: Int = 0
         let n = integer.count
