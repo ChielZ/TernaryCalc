@@ -16,6 +16,15 @@ enum TritGlyphMetrics {
 }
 
 extension Trit {
+    /// Additive inverse: +1 ↔ -1, 0 stays 0.
+    var flipped: Trit {
+        switch self {
+        case .neg:  return .pos
+        case .zero: return .zero
+        case .pos:  return .neg
+        }
+    }
+
     var horizontalExtent: CGFloat {
         self == .zero ? 0 : TritGlyphMetrics.halfDiagonal
     }

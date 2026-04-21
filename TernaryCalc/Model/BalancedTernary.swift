@@ -141,31 +141,34 @@ struct DisplayTrits: Hashable {
 
 extension BalancedTernary {
     /// Convert to display trits, truncating the fractional expansion at
-    /// `maxFractionalTrits` and approaching the true value from below.
-    /// Returns nil on overflow (integer doesn't fit in `maxIntegerTrits`,
-    /// or arithmetic overflow during conversion).
+    /// `maxFractionalTrits`. Truncation is toward zero: the displayed value
+    /// has the same sign as the true value, with magnitude ≤ |true value|.
+    /// This keeps ±x mirror-symmetric in the display — flipping the sign
+    /// of a value flips every trit. Returns nil on overflow.
     func toDisplayTrits(maxIntegerTrits: Int = 18,
                         maxFractionalTrits: Int = 18) -> DisplayTrits? {
+        // Negatives delegate to |value| and flip every trit. A uniform
+        // "floor from below" policy would be mathematically valid but breaks
+        // mirror symmetry: the carry chain triggered by the 2's in the
+        // standard-ternary expansion of q-r leaves a different trit pattern
+        // than flipping the positive expansion of r would.
+        if numerator < 0 {
+            guard numerator != .min else { return nil }
+            guard let positive = flipped.toDisplayTrits(
+                maxIntegerTrits: maxIntegerTrits,
+                maxFractionalTrits: maxFractionalTrits
+            ) else { return nil }
+            return DisplayTrits(
+                integer: positive.integer.map { $0.flipped },
+                fractional: positive.fractional.map { $0.flipped }
+            )
+        }
+
         let p = numerator
         let q = denominator   // already > 0
 
-        // Floor division (toward -∞): Swift's / truncates toward 0.
-        let intFloor: Int
-        let r0: Int
-        if p >= 0 {
-            intFloor = p / q
-            r0 = p - intFloor * q
-        } else {
-            let truncQ = p / q
-            let truncR = p - truncQ * q              // in (-q, 0]
-            if truncR == 0 {
-                intFloor = truncQ
-                r0 = 0
-            } else {
-                intFloor = truncQ - 1
-                r0 = truncR + q                      // in [0, q)
-            }
-        }
+        let intFloor = p / q
+        let r0 = p - intFloor * q
 
         // Standard ternary fractional digits (each in {0, 1, 2}).
         var r = r0
