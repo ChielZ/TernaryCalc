@@ -6,6 +6,7 @@ import SwiftUI
 struct InfoSettingsView: View {
     @AppStorage("palette") private var paletteRaw = TernaryPalette.primary.rawValue
     @AppStorage("displayMode") private var displayModeRaw = TernaryDisplayMode.triTrit.rawValue
+    @AppStorage("showPowerOps") private var showPowerOps = false
     @Environment(\.dismiss) private var dismiss
 
     private var selectedPalette: Binding<TernaryPalette> {
@@ -35,6 +36,7 @@ struct InfoSettingsView: View {
                             Text(mode.displayName).tag(mode)
                         }
                     }
+                    Toggle("Show power operations", isOn: $showPowerOps)
                 }
                 Section("Appearance") {
                     Picker("Colour scheme", selection: selectedPalette) {

@@ -6,12 +6,20 @@ enum BinaryOp: Hashable {
     case add
     case xRight
     case xLeft
+    case powRight
+    case powLeft
+    case logRight
+    case logLeft
 
     var glyph: OperatorGlyph {
         switch self {
-        case .add:    return .plus
-        case .xRight: return .xRight
-        case .xLeft:  return .xLeft
+        case .add:      return .plus
+        case .xRight:   return .xRight
+        case .xLeft:    return .xLeft
+        case .powRight: return .powRight
+        case .powLeft:  return .powLeft
+        case .logRight: return .logRight
+        case .logLeft:  return .logLeft
         }
     }
 }
@@ -195,6 +203,17 @@ final class CalculatorState: ObservableObject {
 
     func operation(_ op: BinaryOp) {
         if errored { return }
+
+        // Log ops have a known-at-press-time validity constraint: the base
+        // (the value that will become the new accumulator when this press
+        // processes) must be positive-and-not-1 for log_right, negative-
+        // and-not-minus-1 for log_left. If the prospective base violates
+        // that, swallow the press silently — the user was trying to take
+        // a log of something it's not defined on.
+        if needsBaseValidation(op), let base = prospectiveAccumulator() {
+            if !isValidBase(base, for: op) { return }
+        }
+
         pushSnapshot()
 
         if let value = currentEntryValue() {
@@ -280,9 +299,13 @@ final class CalculatorState: ObservableObject {
         case .failure(let e): return .failure(e)
         }
         switch op {
-        case .add:    return a.adding(modifiedB)
-        case .xRight: return a.xRight(modifiedB)
-        case .xLeft:  return a.xLeft(modifiedB)
+        case .add:      return a.adding(modifiedB)
+        case .xRight:   return a.xRight(modifiedB)
+        case .xLeft:    return a.xLeft(modifiedB)
+        case .powRight: return a.powRight(modifiedB)
+        case .powLeft:  return a.powLeft(modifiedB)
+        case .logRight: return a.logRight(modifiedB)
+        case .logLeft:  return a.logLeft(modifiedB)
         }
     }
 
@@ -305,6 +328,44 @@ final class CalculatorState: ObservableObject {
 
     private func opsRowGlyphs(_ op: BinaryOp, _ mods: [Modifier]) -> [OperatorGlyph] {
         [op.glyph] + mods.map(\.glyph)
+    }
+
+    private func needsBaseValidation(_ op: BinaryOp) -> Bool {
+        switch op {
+        case .logRight, .logLeft: return true
+        default:                  return false
+        }
+    }
+
+    /// What the accumulator would become after this `operation` press —
+    /// used to decide whether the press is valid for ops that care about
+    /// the base (log_right / log_left). Returns nil when the prior pending
+    /// op fails to evaluate; in that case the main flow will surface the
+    /// overflow itself, so we don't short-circuit here.
+    private func prospectiveAccumulator() -> BalancedTernary? {
+        if let value = currentEntryValue() {
+            if let acc = accumulator, let p = pendingOp {
+                switch evaluate(acc, p, value, pendingModifiers) {
+                case .success(let r): return r
+                case .failure:        return nil
+                }
+            }
+            return value
+        }
+        return accumulator
+    }
+
+    private func isValidBase(_ value: BalancedTernary, for op: BinaryOp) -> Bool {
+        switch op {
+        case .logRight:
+            return value.numerator > 0
+                && value.numerator != value.denominator  // ≠ +1
+        case .logLeft:
+            return value.numerator < 0
+                && value.numerator != -value.denominator // ≠ −1
+        default:
+            return true
+        }
     }
 
     private func strippedLeading(_ trits: [Trit]) -> [Trit] {

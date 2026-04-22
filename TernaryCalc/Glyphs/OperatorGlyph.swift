@@ -13,6 +13,10 @@ enum OperatorGlyph: Hashable {
     case backspace   // chevron `<`
     case point
     case equals
+    case powRight    // backspace mirrored + short vertical bar at tips
+    case powLeft     // backspace + short vertical bar at tips
+    case logRight    // backspace mirrored + short horizontal bar from tips
+    case logLeft     // backspace + short horizontal bar from tips
 }
 
 /// Where a point glyph's ring is placed vertically within its frame.
@@ -87,6 +91,32 @@ struct OperatorShape: Shape {
             // tips. Matches the trit diagonal angle rotated 90°.
             p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
             p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
+
+        case .powLeft:
+            // Backspace V (apex left) + short vertical bar bridging the two
+            // tips on the right — "power" is the vertical stroke.
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
+            p.move(to: P(1300, 560)); p.addLine(to: P(1300, 840))
+
+        case .powRight:
+            // Mirrored backspace V (apex right) + short vertical bar at tips.
+            p.move(to: P(1300, 700)); p.addLine(to: P(100, 300))
+            p.move(to: P(1300, 700)); p.addLine(to: P(100, 1100))
+            p.move(to: P(100, 560));  p.addLine(to: P(100, 840))
+
+        case .logLeft:
+            // Backspace V + short horizontal bar extending from the tip
+            // midpoint inward toward the apex — "log" is the horizontal stroke.
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
+            p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
+            p.move(to: P(1019, 700)); p.addLine(to: P(1300, 700))
+
+        case .logRight:
+            // Mirrored backspace V + short horizontal bar from tips inward.
+            p.move(to: P(1300, 700)); p.addLine(to: P(100, 300))
+            p.move(to: P(1300, 700)); p.addLine(to: P(100, 1100))
+            p.move(to: P(100, 700));  p.addLine(to: P(381, 700))
 
         case .clear:
             // Square outline — four `|`-length sides. Round stroke caps at

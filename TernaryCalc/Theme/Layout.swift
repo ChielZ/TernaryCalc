@@ -52,18 +52,23 @@ struct CalculatorMetrics {
     let keyStroke: CGFloat
 
     static func fit(into available: CGSize,
-                    maxCalcWidth: CGFloat = .infinity) -> CalculatorMetrics {
-        // The calc's overall aspect is no longer a free constant — display
-        // and keypad panels are the same height by design, so calcHeight is
-        // determined entirely by calcWidth and the spacing ratios:
-        //   keySizeRatio       = (1 − 7s) / 4          (s = baseSpacingRatio)
-        //   keypadHeightRatio  = 3·keySizeRatio + 4s
-        //   heightOverWidth    = 2·keypadHeightRatio + 4s
-        //                      = display + keypad + 2·outer + 1·panelGap
+                    maxCalcWidth: CGFloat = .infinity,
+                    keypadRows: Int = 3) -> CalculatorMetrics {
+        // The display is sized as a 3-row-equivalent panel regardless of
+        // keypad row count — turning on power ops grows the keypad (and the
+        // overall calc) but leaves the display proportions untouched, so the
+        // user's "all other proportions stay the same" is preserved.
+        //   keySizeRatio        = (1 − 7s) / 4          (s = baseSpacingRatio)
+        //   displayHeightRatio  = 3·keySizeRatio + 4s
+        //   keypadHeightRatio   = rows·keySizeRatio + (rows+1)·s
+        //   heightOverWidth     = display + keypad + 2·outer + 1·panelGap
+        //                       = displayHeightRatio + keypadHeightRatio + 4s
         let s = CalcLayout.baseSpacingRatio
-        let keySizeRatio      = (1 - 7 * s) / 4
-        let keypadHeightRatio = 3 * keySizeRatio + 4 * s
-        let heightOverWidth   = 2 * keypadHeightRatio + 4 * s
+        let keySizeRatio       = (1 - 7 * s) / 4
+        let rows               = CGFloat(keypadRows)
+        let displayHeightRatio = 3 * keySizeRatio + 4 * s
+        let keypadHeightRatio  = rows * keySizeRatio + (rows + 1) * s
+        let heightOverWidth    = displayHeightRatio + keypadHeightRatio + 4 * s
 
         let widthFromHeight = available.height / heightOverWidth
 
@@ -91,9 +96,9 @@ struct CalculatorMetrics {
         let keyGap             = spacing
         let keyAvail = panelWidth - 2 * keypadInnerPadding - 3 * keyGap
         let keySize  = keyAvail / 4
-        let keypadHeight = 3 * keySize + 2 * keyGap + 2 * keypadInnerPadding
+        let keypadHeight = rows * keySize + (rows - 1) * keyGap + 2 * keypadInnerPadding
 
-        let displayHeight = keypadHeight
+        let displayHeight = 3 * keySize + 2 * keyGap + 2 * keypadInnerPadding
 
         return CalculatorMetrics(
             calcWidth: calcWidth,

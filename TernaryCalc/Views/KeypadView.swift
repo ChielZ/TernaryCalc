@@ -9,12 +9,21 @@ struct KeypadView: View {
     @ObservedObject var state: CalculatorState
     let metrics: CalculatorMetrics
     @Environment(\.ternaryTheme) private var theme
+    @Environment(\.showPowerOps) private var showPowerOps
 
-    private let layout: [[KeyContent]] = [
+    private let powerRow: [KeyContent] = [
+        .op(.powRight), .op(.logRight), .op(.powLeft), .op(.logLeft)
+    ]
+
+    private let baseLayout: [[KeyContent]] = [
         [.trit(.pos),  .op(.xRight), .op(.invert), .op(.clear)],
         [.trit(.zero), .op(.plus),   .op(.flip),   .op(.backspace)],
         [.trit(.neg),  .op(.xLeft),  .op(.point),  .op(.equals)]
     ]
+
+    private var layout: [[KeyContent]] {
+        showPowerOps ? [powerRow] + baseLayout : baseLayout
+    }
 
     var body: some View {
         ZStack {
@@ -31,11 +40,12 @@ struct KeypadView: View {
     }
 
     private var grid: some View {
-        VStack(spacing: metrics.keyGap) {
-            ForEach(0..<3) { row in
+        let rows = layout
+        return VStack(spacing: metrics.keyGap) {
+            ForEach(rows.indices, id: \.self) { row in
                 HStack(spacing: metrics.keyGap) {
                     ForEach(0..<4) { col in
-                        keyButton(layout[row][col])
+                        keyButton(rows[row][col])
                     }
                 }
             }
@@ -77,9 +87,13 @@ struct KeypadView: View {
         case .trit(let t):  state.type(t)
         case .op(let g):
             switch g {
-            case .plus:    state.operation(.add)
-            case .xRight:  state.operation(.xRight)
-            case .xLeft:   state.operation(.xLeft)
+            case .plus:     state.operation(.add)
+            case .xRight:   state.operation(.xRight)
+            case .xLeft:    state.operation(.xLeft)
+            case .powRight: state.operation(.powRight)
+            case .powLeft:  state.operation(.powLeft)
+            case .logRight: state.operation(.logRight)
+            case .logLeft:  state.operation(.logLeft)
             case .invert:    state.invert()
             case .flip:      state.flip()
             case .clear:     state.clear()

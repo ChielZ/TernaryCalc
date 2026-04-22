@@ -116,6 +116,10 @@ private struct TernaryDisplayModeKey: EnvironmentKey {
     static let defaultValue: TernaryDisplayMode = .triTrit
 }
 
+private struct ShowPowerOpsKey: EnvironmentKey {
+    static let defaultValue: Bool = false
+}
+
 extension EnvironmentValues {
     var ternaryTheme: TernaryTheme {
         get { self[TernaryThemeKey.self] }
@@ -125,5 +129,10 @@ extension EnvironmentValues {
     var ternaryDisplayMode: TernaryDisplayMode {
         get { self[TernaryDisplayModeKey.self] }
         set { self[TernaryDisplayModeKey.self] = newValue }
+    }
+
+    var showPowerOps: Bool {
+        get { self[ShowPowerOpsKey.self] }
+        set { self[ShowPowerOpsKey.self] = newValue }
     }
 }

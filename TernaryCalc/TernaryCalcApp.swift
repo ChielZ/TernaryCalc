@@ -13,12 +13,14 @@ struct TernaryCalcApp: App {
     // can handle it directly. The settings screen writes the same key.
     @AppStorage("palette") private var paletteRaw = TernaryPalette.primary.rawValue
     @AppStorage("displayMode") private var displayModeRaw = TernaryDisplayMode.triTrit.rawValue
+    @AppStorage("showPowerOps") private var showPowerOps = false
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.ternaryTheme, theme)
                 .environment(\.ternaryDisplayMode, displayMode)
+                .environment(\.showPowerOps, showPowerOps)
         }
     }
 

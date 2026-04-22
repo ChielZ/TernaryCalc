@@ -96,6 +96,104 @@ extension BalancedTernary {
             return .success(BalancedTernary(rawNumerator: -denominator, rawDenominator: -numerator))
         }
     }
+
+    /// Exponentiation: self^other. Uses exact repeated multiplication when
+    /// `other` is integer (preserves rationality); otherwise falls back to
+    /// `Double` and approximates the result as a rational with denominator
+    /// 3^18 — which happens to "snap" near-integer floats (e.g. the 2.99999…
+    /// you get from `log(8)/log(2)` in double arithmetic) back to exact
+    /// integers after GCD reduction.
+    func powRight(_ other: BalancedTernary) -> Result<BalancedTernary, OperationError> {
+        if other.denominator == 1 {
+            return integerPow(exp: other.numerator)
+        }
+        let result = Foundation.pow(self.toDouble, other.toDouble)
+        guard let bt = BalancedTernary.fromDouble(result) else {
+            return .failure(.overflow)
+        }
+        return .success(bt)
+    }
+
+    /// Mirror exponentiation: −self^other mirrored so that −1 (not +1) is
+    /// the exponent identity. Concretely: `pow_left(x, n) = −pow_right(−x, −n)`,
+    /// which preserves `pow_left(−x, −n) = −pow_right(x, n)` — the same
+    /// "switch operation, mirror inputs, mirror result" symmetry that
+    /// `x_left(a, b) = −x_right(−a, −b)` already gives multiplication.
+    func powLeft(_ other: BalancedTernary) -> Result<BalancedTernary, OperationError> {
+        switch self.flipped.powRight(other.flipped) {
+        case .success(let r): return .success(r.flipped)
+        case .failure(let e): return .failure(e)
+        }
+    }
+
+    /// log_self(other). Requires self > 0, self ≠ 1, other > 0; returns
+    /// overflow otherwise.
+    func logRight(_ other: BalancedTernary) -> Result<BalancedTernary, OperationError> {
+        guard self.numerator > 0,
+              self.numerator != self.denominator,
+              other.numerator > 0 else {
+            return .failure(.overflow)
+        }
+        let result = Foundation.log(other.toDouble) / Foundation.log(self.toDouble)
+        guard let bt = BalancedTernary.fromDouble(result) else {
+            return .failure(.overflow)
+        }
+        return .success(bt)
+    }
+
+    /// Mirror logarithm: `log_left(x, y) = −log_right(−x, −y)`. Requires
+    /// self < 0, self ≠ −1, other < 0 (same real domain as the formula A
+    /// version — the sign of the result is the part that flips).
+    func logLeft(_ other: BalancedTernary) -> Result<BalancedTernary, OperationError> {
+        guard self.numerator < 0,
+              self.numerator != -self.denominator,
+              other.numerator < 0 else {
+            return .failure(.overflow)
+        }
+        switch self.flipped.logRight(other.flipped) {
+        case .success(let r): return .success(r.flipped)
+        case .failure(let e): return .failure(e)
+        }
+    }
+
+    /// Exact integer power: self^n via repeated multiplication.
+    private func integerPow(exp n: Int) -> Result<BalancedTernary, OperationError> {
+        if n == 0 { return .success(.one) }
+        if n < 0 {
+            guard n != .min else { return .failure(.overflow) }
+            switch self.inverted {
+            case .success(let inv): return inv.integerPow(exp: -n)
+            case .failure(let e):   return .failure(e)
+            }
+        }
+        var result = BalancedTernary.one
+        for _ in 0..<n {
+            switch result.xRight(self) {
+            case .success(let r): result = r
+            case .failure(let e): return .failure(e)
+            }
+        }
+        return .success(result)
+    }
+}
+
+// MARK: - Double bridge (for transcendental ops)
+
+extension BalancedTernary {
+    var toDouble: Double {
+        Double(numerator) / Double(denominator)
+    }
+
+    /// Rational approximation with denominator 3^18. Returns nil on NaN,
+    /// infinity, or Int-range overflow.
+    static func fromDouble(_ d: Double) -> BalancedTernary? {
+        guard d.isFinite else { return nil }
+        let scale = 387_420_489  // 3^18
+        let scaled = d * Double(scale)
+        guard scaled.magnitude < Double(Int.max) else { return nil }
+        let numerator = Int(scaled.rounded())
+        return BalancedTernary.make(numerator: numerator, denominator: scale)
+    }
 }
 
 // MARK: - Display conversion
