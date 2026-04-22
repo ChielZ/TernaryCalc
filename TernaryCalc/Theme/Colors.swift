@@ -20,8 +20,8 @@ enum TernaryPalette: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .primary:   return "Primary"
-        case .secondary: return "Secondary"
+        case .primary:   return "Default"
+        case .secondary: return "Inverted"
         }
     }
 }
@@ -39,7 +39,7 @@ enum TernaryDisplayMode: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .triTrit: return "Tri-ternary"
-        case .simple:  return "Simple ternary"
+        case .simple:  return "Pure ternary"
         }
     }
 
@@ -113,7 +113,7 @@ private struct TernaryThemeKey: EnvironmentKey {
 }
 
 private struct TernaryDisplayModeKey: EnvironmentKey {
-    static let defaultValue: TernaryDisplayMode = .triTrit
+    static let defaultValue: TernaryDisplayMode = .simple
 }
 
 private struct ShowPowerOpsKey: EnvironmentKey {

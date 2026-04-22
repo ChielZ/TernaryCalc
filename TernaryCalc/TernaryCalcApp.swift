@@ -12,7 +12,7 @@ struct TernaryCalcApp: App {
     // Persisted palette selection. Stored as the raw string so `@AppStorage`
     // can handle it directly. The settings screen writes the same key.
     @AppStorage("palette") private var paletteRaw = TernaryPalette.primary.rawValue
-    @AppStorage("displayMode") private var displayModeRaw = TernaryDisplayMode.triTrit.rawValue
+    @AppStorage("displayMode") private var displayModeRaw = TernaryDisplayMode.simple.rawValue
     @AppStorage("showPowerOps") private var showPowerOps = false
 
     var body: some Scene {
