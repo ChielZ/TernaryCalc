@@ -12,7 +12,7 @@ struct KeypadView: View {
     @Environment(\.showPowerOps) private var showPowerOps
 
     private let powerRow: [KeyContent] = [
-        .op(.powRight), .op(.logRight), .op(.powLeft), .op(.logLeft)
+        .op(.powRight), .op(.logRight), .op(.logLeft), .op(.powLeft)
     ]
 
     private let baseLayout: [[KeyContent]] = [

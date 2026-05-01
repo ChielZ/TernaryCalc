@@ -11,30 +11,6 @@ enum SettingsColors {
 
 // MARK: - Flat controls
 
-/// Sliding pill toggle, no system chrome. Animation is driven by the
-/// consumer via `.animation(_:value:)` on the underlying value — that's
-/// reliable across `@AppStorage` writes (which `withAnimation` is not).
-struct FlatToggleStyle: ToggleStyle {
-    let color: Color
-
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.label
-            Spacer()
-            ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-                Capsule()
-                    .fill(color.opacity(0.15))
-                    .frame(width: 44, height: 26)
-                Circle()
-                    .fill(color)
-                    .frame(width: 22, height: 22)
-                    .padding(2)
-            }
-            .onTapGesture { configuration.isOn.toggle() }
-        }
-    }
-}
-
 /// Segmented picker that's just a row of tappable cells with two static
 /// background opacities — selected vs unselected. No system styling.
 struct FlatPicker<T: Hashable>: View {
@@ -157,29 +133,42 @@ struct SettingsView: View {
     // MARK: Controls
 
     private func controlsContent(compact: Bool) -> some View {
-        VStack(alignment: .leading, spacing: compact ? 24 : 20) {
-            Text("Colour scheme")
-            FlatPicker(
-                selection: selectedPalette,
-                options: [
-                    (TernaryPalette.primary,   "Default"),
-                    (TernaryPalette.secondary, "Inverted"),
-                ],
-                color: uiFg
-            )
+        VStack(alignment: .center, spacing: compact ? 30 : 24) {
+            VStack(alignment: .center, spacing: 12) {
+                Text("Number system")
+                FlatPicker(
+                    selection: selectedMode,
+                    options: [
+                        (TernaryDisplayMode.simple,  "Pure ternary"),
+                        (TernaryDisplayMode.triTrit, "Tri-ternary"),
+                    ],
+                    color: uiFg
+                )
+            }
 
-            Text("Number system")
-            FlatPicker(
-                selection: selectedMode,
-                options: [
-                    (TernaryDisplayMode.simple,  "Pure ternary"),
-                    (TernaryDisplayMode.triTrit, "Tri-ternary"),
-                ],
-                color: uiFg
-            )
+            VStack(alignment: .center, spacing: 12) {
+                Text("Power operation buttons")
+                FlatPicker(
+                    selection: $showPowerOps,
+                    options: [
+                        (false, "Hide"),
+                        (true,  "Show"),
+                    ],
+                    color: uiFg
+                )
+            }
 
-            Toggle("Show power operations", isOn: $showPowerOps)
-                .toggleStyle(FlatToggleStyle(color: uiFg))
+            VStack(alignment: .center, spacing: 12) {
+                Text("Colour scheme")
+                FlatPicker(
+                    selection: selectedPalette,
+                    options: [
+                        (TernaryPalette.primary,   "Default"),
+                        (TernaryPalette.secondary, "Inverted"),
+                    ],
+                    color: uiFg
+                )
+            }
 
             Text("tap calculator to close settings screen")
                 .font(.custom("Comfortaa", size: 14))
@@ -193,14 +182,16 @@ struct SettingsView: View {
 
     private var rightPanel: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .center, spacing: 24) {
                 Text("Ternary Calculator")
                     .font(.custom("Comfortaa", size: 24).weight(.bold))
                     .padding(.bottom, 4)
 
-                Text("Info text goes here — to be added.")
+                //Info text goes here — to be added.
+                Text("")
                     .font(.custom("Comfortaa", size: 16))
                     .lineSpacing(16 * 0.1)
+                    .multilineTextAlignment(.center)
                     .opacity(0.7)
             }
             .padding(24)

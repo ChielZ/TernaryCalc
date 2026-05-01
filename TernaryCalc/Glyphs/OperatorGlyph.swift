@@ -13,10 +13,10 @@ enum OperatorGlyph: Hashable {
     case backspace   // chevron `<`
     case point
     case equals
-    case powRight    // backspace mirrored + short vertical bar at tips
-    case powLeft     // backspace + short vertical bar at tips
-    case logRight    // backspace mirrored + short horizontal bar from tips
-    case logLeft     // backspace + short horizontal bar from tips
+    case powRight    // V apex up + short bar from base midpoint toward apex
+    case powLeft     // V apex down + short bar from top midpoint toward apex
+    case logRight    // V apex up + short bar bridging the tips
+    case logLeft     // V apex down + short bar bridging the tips
 }
 
 /// Where a point glyph's ring is placed vertically within its frame.
@@ -93,30 +93,31 @@ struct OperatorShape: Shape {
             p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
 
         case .powLeft:
-            // Backspace V (apex left) + short vertical bar bridging the two
-            // tips on the right — "power" is the vertical stroke.
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
-            p.move(to: P(1300, 560)); p.addLine(to: P(1300, 840))
+            // V apex down + short bar from top tip-midpoint extending
+            // inward toward apex — "power" is the inward stroke.
+            p.move(to: P(700, 1300)); p.addLine(to: P(300, 100))
+            p.move(to: P(700, 1300)); p.addLine(to: P(1100, 100))
+            p.move(to: P(700, 381));  p.addLine(to: P(700, 100))
 
         case .powRight:
-            // Mirrored backspace V (apex right) + short vertical bar at tips.
-            p.move(to: P(1300, 700)); p.addLine(to: P(100, 300))
-            p.move(to: P(1300, 700)); p.addLine(to: P(100, 1100))
-            p.move(to: P(100, 560));  p.addLine(to: P(100, 840))
+            // V apex up + short bar from base tip-midpoint extending
+            // inward toward apex.
+            p.move(to: P(700, 100));  p.addLine(to: P(300, 1300))
+            p.move(to: P(700, 100));  p.addLine(to: P(1100, 1300))
+            p.move(to: P(700, 1300)); p.addLine(to: P(700, 1019))
 
         case .logLeft:
-            // Backspace V + short horizontal bar extending from the tip
-            // midpoint inward toward the apex — "log" is the horizontal stroke.
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 300))
-            p.move(to: P(100, 700));  p.addLine(to: P(1300, 1100))
-            p.move(to: P(1019, 700)); p.addLine(to: P(1300, 700))
+            // V apex down + short bar bridging the two tips at the top —
+            // "log" is the bridging stroke.
+            p.move(to: P(700, 1300)); p.addLine(to: P(300, 100))
+            p.move(to: P(700, 1300)); p.addLine(to: P(1100, 100))
+            p.move(to: P(560, 100));  p.addLine(to: P(840, 100))
 
         case .logRight:
-            // Mirrored backspace V + short horizontal bar from tips inward.
-            p.move(to: P(1300, 700)); p.addLine(to: P(100, 300))
-            p.move(to: P(1300, 700)); p.addLine(to: P(100, 1100))
-            p.move(to: P(100, 700));  p.addLine(to: P(381, 700))
+            // V apex up + short bar bridging the two tips at the base.
+            p.move(to: P(700, 100));  p.addLine(to: P(300, 1300))
+            p.move(to: P(700, 100));  p.addLine(to: P(1100, 1300))
+            p.move(to: P(560, 1300)); p.addLine(to: P(840, 1300))
 
         case .clear:
             // Square outline — four `|`-length sides. Round stroke caps at
